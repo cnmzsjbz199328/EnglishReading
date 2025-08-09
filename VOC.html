@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VOA 新闻影子跟读简易版</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f8fc; margin: 30px; }
+    h2 { color: #1557bf; margin-bottom: 8px; }
+    #list { margin-bottom: 30px; display:flex; flex-direction:column; gap:6px; }
+    #list button { background:#fff; border:1px solid #def; padding:8px 15px; cursor:pointer; font-size:1em; border-radius:6px; text-align:left; }
+    #list button:hover { background:#e6f1ff; }
+    #detail { background:#fff; box-shadow:0 2px 8px #dde5eb; border-radius:10px; padding:25px; }
+    audio { width:100%; margin:12px 0; }
+    .error { color:#c62828; }
+    .loading { color:#666; font-style:italic; }
+    #search { margin:0 0 20px 0; display:flex; gap:8px; }
+    #search input { flex:1; padding:8px 10px; border:1px solid #ccd; border-radius:6px; }
+    #search button { padding:8px 15px; border:1px solid #1557bf; background:#1557bf; color:#fff; border-radius:6px; cursor:pointer; }
+    #search button:hover { background:#0d3d89; }
+    pre { white-space:pre-wrap; font-size:1.05em; line-height:1.5; }
+    #apiInfo { font-size:12px; color:#555; margin-bottom:10px; }
+    #apiInfo input { width:320px; padding:4px 6px; font-size:12px; }
+    #apiInfo button { padding:4px 8px; font-size:12px; margin-left:4px; }
+  </style>
+</head>
+<body>
+  <h2>VOA 新闻列表</h2>
+  <div id="search">
+    <input id="kw" placeholder="关键词过滤 (前端本地过滤)" />
+    <button id="refresh">刷新</button>
+  </div>
+  <div id="apiInfo">Backend: <input id="apiBaseInput" /> <button id="applyApi">切换</button> <span id="apiStatus"></span></div>
+  <div id="list">正在加载新闻列表……</div>
+  <div id="detail"></div>
+
+<script>
+// ====== API 基础地址智能选择 ======
+const DEPLOY_URL = 'https://english-reading-app.tj15982183241.workers.dev';
+let API_BASE = DEPLOY_URL; // 统一使用线上部署，可仍手动覆盖
+// 允许 localStorage 覆盖
+const saved = localStorage.getItem('api_base_override');
+if (saved) API_BASE = saved;
+
+const apiInput = document.getElementById('apiBaseInput');
+apiInput.value = API_BASE;
+
+function setApiStatus(msg, ok=true){
+  const span = document.getElementById('apiStatus');
+  span.textContent = msg;
+  span.style.color = ok ? '#2e7d32' : '#c62828';
+}
+
+document.getElementById('applyApi').onclick = async () => {
+  const val = apiInput.value.trim().replace(/\/$/, '');
+  if (!val) return;
+  setApiStatus('测试中...', true);
+  try {
+    const r = await fetch(val + '/api/voa/feed', { method:'GET' });
+    if (!r.ok) throw new Error(r.status);
+    API_BASE = val;
+    localStorage.setItem('api_base_override', API_BASE);
+    setApiStatus('已切换', true);
+    loadFeed();
+  } catch(e){
+    setApiStatus('不可用: ' + e.message, false);
+  }
+};
+
+let FEED_CACHE = [];
+
+async function loadFeed() {
+  const listDiv = document.getElementById('list');
+  listDiv.innerHTML = '<span class="loading">加载中...</span>';
+  try {
+    const res = await fetch(API_BASE + '/api/voa/feed');
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Feed 获取失败');
+    FEED_CACHE = json.data;
+    renderFeed();
+  } catch (e) {
+    listDiv.innerHTML = '<span class="error">列表加载失败: '+ e.message +'</span>';
+  }
+}
+
+function renderFeed() {
+  const kw = document.getElementById('kw').value.trim().toLowerCase();
+  const listDiv = document.getElementById('list');
+  listDiv.innerHTML = '';
+  const filtered = FEED_CACHE.filter(it => !kw || it.title.toLowerCase().includes(kw));
+  if (!filtered.length) {
+    listDiv.textContent = '无结果';
+    return;
+  }
+  filtered.forEach(item => {
+    const btn = document.createElement('button');
+    btn.textContent = item.title;
+    btn.onclick = () => loadArticle(item.link, item.title);
+    listDiv.appendChild(btn);
+  });
+}
+
+document.getElementById('kw').addEventListener('input', renderFeed);
+document.getElementById('refresh').addEventListener('click', loadFeed);
+
+async function loadArticle(url, fallbackTitle) {
+  const detail = document.getElementById('detail');
+  detail.innerHTML = '<div class="loading">抓取文章...</div>';
+  try {
+    const u = API_BASE + '/api/voa/article?url=' + encodeURIComponent(url);
+    const res = await fetch(u);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || '文章获取失败');
+    const { title, audio, text } = json.data;
+    detail.innerHTML = `<h3>${title || fallbackTitle}</h3>` +
+      (audio ? `<audio controls src="${audio}"></audio>` : '<p class="error">未发现音频</p>') +
+      `<pre>${escapeHtml(text)}</pre>`;
+  } catch (e) {
+    detail.innerHTML = '<p class="error">文章加载失败: ' + e.message + '</p>';
+  }
+}
+
+function escapeHtml(str){
+  return str.replace(/[&<>]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c]));
+}
+
+loadFeed();
+</script>
+</body>
+</html>
