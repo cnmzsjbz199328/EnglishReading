@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>English Reading - MVP Prototype</title>
+  <style>
+    :root { --bg:#0b1120; --panel:#111827; --muted:#374151; --text:#e5e7eb; --brand:#22c55e; --danger:#ef4444; }
+    html, body { height:100%; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--text); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .header { display:flex; gap:16px; align-items:center; margin-bottom: 16px; }
+    input[type="text"], textarea { width:100%; padding:10px 12px; border-radius: 10px; border:1px solid #1f2937; background:#0f172a; color:var(--text); outline:none; }
+    input[type="file"] { color: var(--text); }
+    label { display:block; font-size: 14px; color:#9ca3af; margin-bottom:6px; }
+    .row { display:grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 900px) { .row { grid-template-columns: 1.2fr 1fr; } }
+    .card { background: linear-gradient(180deg, #0b122a 0%, #0b1120 100%); border: 1px solid #1f2937; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .card h2 { margin: 0 0 12px; font-size: 16px; color:#d1d5db; }
+    .btn { appearance:none; border:none; background: var(--brand); color:#062b19; font-weight: 700; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+    .btn.secondary { background:#1f2937; color:#e5e7eb; border:1px solid #374151; }
+    .btn.danger { background: var(--danger); color: #2b0a0a; }
+    .list { display:flex; flex-direction: column; gap: 10px; }
+    .item { display:flex; align-items:center; justify-content: space-between; gap:10px; padding: 10px; border:1px solid #1f2937; border-radius: 12px; background: #0a0f1d; }
+    .item h4 { margin: 0; font-size: 15px; }
+    .muted { color:#9ca3af; font-size: 12px; }
+    .actions { display:flex; gap:8px; }
+    .status { margin-top: 10px; min-height: 20px; color:#93c5fd; }
+    .audio { width: 100%; margin-top: 8px; }
+    .badge { font-size: 12px; color:#93c5fd; }
+    .flex { display:flex; gap:8px; align-items:center; }
+    .debug-panel { margin-top:16px; background:#0a0f1d; border:1px solid #1f2937; border-radius:12px; padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; max-height:240px; overflow:auto; line-height:1.4; }
+    .debug-panel h3 { margin:0 0 6px; font-size:12px; letter-spacing:0.5px; color:#93c5fd; display:flex; justify-content:space-between; align-items:center; }
+    .debug-entry.ok { color:#34d399; }
+    .debug-entry.err { color:#f87171; }
+    .debug-entry.step { color:#93c5fd; }
+    .debug-controls button { background:#1f2937; color:#9ca3af; border:1px solid #374151; border-radius:6px; padding:2px 6px; cursor:pointer; font-size:11px; }
+    .debug-controls button:hover { color:#e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin:0; font-size: 20px;">English Reading - Prototype</h1>
+      <span class="badge">MVP Tester</span>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="flex" style="flex-wrap: wrap; gap: 10px 12px;">
+        <div style="flex:1 1 340px; min-width: 260px;">
+          <label>API Base URL</label>
+          <input id="baseUrl" type="text" value="https://english-reading-app.tj15982183241.workers.dev" placeholder="https://<your-worker>.workers.dev" />
+        </div>
+        <div class="flex">
+          <button class="btn secondary" id="btnRefresh">Refresh List</button>
+        </div>
+      </div>
+      <div id="globalStatus" class="status"></div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <h2>Create Exercise</h2>
+        <div>
+          <label>Title</label>
+          <input id="title" type="text" placeholder="A short title" />
+        </div>
+        <div>
+          <label>Text</label>
+          <textarea id="text" rows="6" placeholder="Paste your reading text here..."></textarea>
+        </div>
+        <div>
+          <label>Audio File (mp3/wav)</label>
+          <input id="file" type="file" accept="audio/*" />
+        </div>
+        <div style="margin-top: 10px; display:flex; gap:10px;">
+          <button class="btn" id="btnSubmit">Upload & Save</button>
+          <button class="btn secondary" id="btnClear">Clear</button>
+        </div>
+        <div id="createStatus" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Practice View</h2>
+        <div id="detail">
+          <div class="muted">Select an item from the list to view details and play audio.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h2>Your Exercises</h2>
+      <div id="list" class="list"></div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel">
+      <h3>Debug Log <span class="debug-controls"><button id="btnClearLog" title="Clear">Clear</button><button id="btnToggleLog" title="Collapse">Hide</button></span></h3>
+      <div id="debugBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Debug Helpers =====
+    const DEBUG = true;
+    const debugBody = () => document.getElementById('debugBody');
+    function ts() { return new Date().toISOString().split('T')[1].replace('Z',''); }
+    function addLog(msg, type='step', extra) {
+      if(!DEBUG) return; 
+      console.log('[MVP]', type.toUpperCase(), msg, extra||'');
+      const line = document.createElement('div');
+      line.className = `debug-entry ${type}`;
+      line.textContent = `[${ts()}] ${msg}`;
+      debugBody().appendChild(line);
+      // Auto scroll
+      debugBody().parentElement.scrollTop = debugBody().parentElement.scrollHeight;
+    }
+    function logStep(m,e){addLog(m,'step',e);} 
+    function logOk(m,e){addLog(m,'ok',e);} 
+    function logErr(m,e){addLog(m,'err',e);} 
+
+    document.addEventListener('click', (ev)=>{
+      if(ev.target.id==='btnClearLog'){ debugBody().innerHTML=''; addLog('Log cleared','step'); }
+      if(ev.target.id==='btnToggleLog'){ const panel = document.getElementById('debugPanel'); const bodyDiv = debugBody(); if(panel.dataset.min==='1'){ panel.dataset.min='0'; bodyDiv.style.display='block'; ev.target.textContent='Hide'; addLog('Debug expanded','step'); } else { panel.dataset.min='1'; bodyDiv.style.display='none'; ev.target.textContent='Show'; addLog('Debug collapsed','step'); } }
+    });
+
+    // ===== Existing Code with Logs Injected =====
+    const $ = (id) => document.getElementById(id);
+    const state = { base: $("baseUrl").value };
+    $("baseUrl").addEventListener('change', () => { state.base = $("baseUrl").value.trim(); logStep('Base URL changed: '+state.base); });
+
+    const setStatus = (el, msg, isError=false) => {
+      el.textContent = msg || '';
+      el.style.color = isError ? '#fecaca' : '#93c5fd';
+      if(isError) logErr(`Status(${el.id}): ${msg}`); else logStep(`Status(${el.id}): ${msg}`);
+    };
+
+    async function fetchJSON(url, options={}) {
+      logStep('HTTP '+(options.method||'GET')+' → '+url, options.body?('Body '+truncate(options.body,120)):'')
+      const started = performance.now();
+      const res = await fetch(url, options).catch(err=>{ logErr('Network error '+ url, err); throw err; });
+      const dur = (performance.now()-started).toFixed(0);
+      let text;
+      try { text = await res.text(); } catch(e){ text = ''; }
+      logStep('HTTP RESP '+res.status+' ('+dur+'ms) ← '+url, truncate(text, 200));
+      if (!res.ok) {
+        logErr('HTTP error status '+res.status+' for '+url);
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      try { return JSON.parse(text); } catch(e){ logErr('JSON parse failed', e); throw e; }
+    }
+
+    function truncate(v, n){ if(!v) return ''; return v.length>n? v.slice(0,n)+'…('+v.length+')' : v; }
+
+    async function loadList() {
+      setStatus($("globalStatus"), 'Loading list...');
+      logStep('Load list start');
+      try {
+        const data = await fetchJSON(`${state.base}/api/recordings`);
+        const list = data.data || [];
+        logOk('List loaded count='+list.length);
+        renderList(list);
+        setStatus($("globalStatus"), `Loaded ${list.length} item(s).`);
+      } catch (e) {
+        logErr('Load list failed', e);
+        setStatus($("globalStatus"), e.message, true);
+      }
+    }
+
+    function renderList(items) {
+      logStep('Render list count='+items.length);
+      const root = $("list");
+      root.innerHTML = '';
+      if (!items.length) {
+        root.innerHTML = '<div class="muted">No data yet.</div>';
+        return;
+      }
+      for (const it of items) {
+        const row = document.createElement('div');
+        row.className = 'item';
+        row.innerHTML = `
+          <div>
+            <h4>${escapeHtml(it.title || '(no title)')}</h4>
+            <div class="muted">${escapeHtml(it.createdAt || '')} · id: ${escapeHtml(it.id || '')}</div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" data-open="${it.id}">Open</button>
+            <button class="btn danger" data-del="${it.id}">Delete</button>
+          </div>
+        `;
+        row.querySelector('[data-open]')?.addEventListener('click', () => openDetail(it.id));
+        row.querySelector('[data-del]')?.addEventListener('click', () => deleteItem(it.id));
+        root.appendChild(row);
+      }
+    }
+
+    async function openDetail(id) {
+      logStep('Open detail id='+id);
+      const el = $("detail");
+      el.innerHTML = '<div class="muted">Loading...</div>';
+      try {
+        const data = await fetchJSON(`${state.base}/api/recordings/${id}`);
+        const d = data.data || {};
+        logOk('Detail loaded id='+id);
+        el.innerHTML = `
+          <div style="display:flex; flex-direction: column; gap: 8px;">
+            <div><strong>Title:</strong> ${escapeHtml(d.title || '')}</div>
+            <div><strong>Text:</strong><br/><div style="white-space: pre-wrap;">${escapeHtml(d.text || d.originalText || '')}</div></div>
+            <audio class="audio" id="audio" controls preload="none"></audio>
+          </div>
+        `;
+        const audio = document.getElementById('audio');
+        audio.src = `${state.base}/api/recordings/${id}/audio`;
+        logStep('Audio src set '+audio.src);
+        audio.load();
+      } catch (e) {
+        logErr('Open detail failed id='+id, e);
+        el.innerHTML = `<div class="muted">Failed to load: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function deleteItem(id) {
+      logStep('Delete confirm id='+id);
+      if (!confirm('Delete this exercise?')) { logStep('Delete cancelled id='+id); return; }
+      try {
+        await fetchJSON(`${state.base}/api/recordings/${id}`, { method: 'DELETE' });
+        logOk('Delete success id='+id);
+        await loadList();
+      } catch (e) {
+        logErr('Delete failed id='+id, e);
+        alert('Delete failed: ' + e.message);
+      }
+    }
+
+    async function uploadFile(file) {
+      logStep('Upload start name='+file.name+' size='+file.size);
+      // Try direct upload first
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        logStep('Direct upload attempt');
+        const res = await fetch(`${state.base}/api/upload`, { method: 'POST', body: fd });
+        logStep('Direct upload response status='+res.status);
+        if (res.ok) {
+          const json = await res.json().catch(()=>({}));
+          logStep('Direct upload parsed', json);
+            if (json?.success && json?.data?.key) { logOk('Direct upload success key='+json.data.key); return json.data.key; }
+        }
+      } catch (e) { logErr('Direct upload error', e); }
+
+      // Fallback: presigned URL flow
+      logStep('Fallback presigned start');
+      const qsName = encodeURIComponent(file.name);
+      const pre = await fetchJSON(`${state.base}/api/presigned-url?filename=${qsName}`).catch(err => {
+        logErr('Presigned request failed', err);
+        throw new Error('Upload not available: ' + err.message);
+      });
+
+      const data = pre.data || pre; 
+      const uploadUrl = data.uploadUrl || data.url;
+      const key = data.key || data.r2ObjectKey || data.objectKey || '';
+      logStep('Presigned received key='+key);
+      if (!uploadUrl || !key) { logErr('Presigned invalid response'); throw new Error('Invalid presigned response'); }
+
+      const putRes = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
+      logStep('PUT upload status='+putRes.status);
+      if (!(putRes.ok || putRes.status === 204)) { logErr('PUT upload failed status='+putRes.status); throw new Error('PUT upload failed: ' + putRes.status); }
+      logOk('Fallback upload success key='+key);
+      return key;
+    }
+
+    $("btnSubmit").addEventListener('click', async () => {
+      logStep('Submit clicked');
+      const title = $("title").value.trim();
+      const text = $("text").value.trim();
+      const file = $("file").files[0];
+
+      if (!title || !text || !file) {
+        logErr('Validation failed title/text/file missing');
+        setStatus($("createStatus"), 'Please fill all fields and select an audio file.', true);
+        return;
+      }
+
+      setStatus($("createStatus"), 'Uploading audio...');
+      try {
+        const key = await uploadFile(file);
+        logOk('Upload finished key='+key);
+        setStatus($("createStatus"), 'Saving record...');
+
+        const payload = { title, text, audioKey: key };
+        logStep('Create recording payload', payload);
+        const created = await fetchJSON(`${state.base}/api/recordings`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        logOk('Create recording success id='+(created?.data?.id));
+
+        setStatus($("createStatus"), 'Saved!');
+        $("title").value = '';
+        $("text").value = '';
+        $("file").value = '';
+        await loadList();
+        if (created?.data?.id) openDetail(created.data.id);
+      } catch (e) {
+        logErr('Submit failed', e);
+        setStatus($("createStatus"), e.message, true);
+      }
+    });
+
+    $("btnClear").addEventListener('click', () => {
+      logStep('Clear form');
+      $("title").value = '';
+      $("text").value = '';
+      $("file").value = '';
+      setStatus($("createStatus"), '');
+    });
+
+    $("btnRefresh").addEventListener('click', () => { logStep('Manual refresh'); loadList(); });
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    // initial
+    logStep('App init start');
+    loadList().then(()=>logOk('Initial list loaded')).catch(()=>{});
+  </script>
+</body>
+</html>

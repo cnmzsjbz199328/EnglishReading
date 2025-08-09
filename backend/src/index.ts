@@ -228,17 +228,28 @@ app.get('/api/recordings/:id/audio', async (c) => {
 app.delete('/api/recordings/:id', async (c) => {
   try {
     const id = c.req.param('id')
-    
-    const record = await c.env.DB.prepare("SELECT id FROM recordings WHERE id = ?").bind(id).first()
-    
+    // 获取完整记录以拿到 r2_object_key / audioKey
+    const record = await c.env.DB.prepare("SELECT id, r2_object_key as audioKey FROM recordings WHERE id = ?").bind(id).first() as { id: string, audioKey?: string } | null
+
     if (!record) {
       return c.json({ success: false, error: '录音不存在' }, 404)
     }
-    
+
+    let r2Deleted: boolean | null = null
+    if (record.audioKey) {
+      try {
+        await c.env.R2_BUCKET.delete(record.audioKey)
+        r2Deleted = true
+      } catch (err) {
+        console.warn('R2 对象删除失败 (继续删除数据库记录):', err)
+        r2Deleted = false
+      }
+    }
+
     await c.env.DB.prepare("DELETE FROM recordings WHERE id = ?").bind(id).run()
-    
-    return c.json({ success: true, data: { message: '录音删除成功' } })
-  } catch (error) {
+
+    return c.json({ success: true, data: { message: '录音删除成功', r2Deleted } })
+  } catch (error: any) {
     console.error('删除录音失败:', error)
     return c.json({ 
       success: false, 
@@ -447,16 +458,16 @@ app.get('/api/info', (c) => {
         createRecording: "POST /api/recordings - Create new recording (title, text, audioKey)",
         updateRecording: "PUT /api/recordings/:id - Update recording (title, text, audioKey)",
         getRecordingAudio: "GET /api/recordings/:id/audio - Get recording audio stream",
-        deleteRecording: "DELETE /api/recordings/:id - Delete recording",
+        deleteRecording: "DELETE /api/recordings/:id - Delete recording (and attempt to delete R2 object)",
         
         // 扩展功能端点
-        health: "GET /api/health - Basic health check",
-        healthDb: "GET /api/health/db - Database health check", 
-        uploadFile: "POST /api/upload - Direct file upload",
-        uploadUrl: "GET /api/upload-url/:filename - Get upload URL (Legacy)",
-        batchRecordings: "POST /api/recordings/batch - Get multiple recordings",
-        searchRecordings: "GET /api/recordings/search?q=query - Search recordings",
-        getRecordingDetails: "GET /api/recordings/:id - Get recording details"
+        health: "GET /api/health - 基础健康检查",
+        healthDb: "GET /api/health/db - 数据库健康检查", 
+        uploadFile: "POST /api/upload - 直接文件上传",
+        uploadUrl: "GET /api/upload-url/:filename - 获取上传URL (遗留支持)",
+        batchRecordings: "POST /api/recordings/batch - 批量获取录音",
+        searchRecordings: "GET /api/recordings/search?q=query - 搜索录音",
+        getRecordingDetails: "GET /api/recordings/:id - 获取录音详情"
       },
       features: [
         "CORS enabled for local development",
