@@ -1,26 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>VOA 新闻影子跟读</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h2>VOA 新闻影子跟读</h2>
-  <div class="top-bar">
-    <select id="categorySelect"><option value="">加载分类...</option></select>
-    <select id="titleSelect" disabled><option value="">请选择文章标题</option></select>
-    <button id="modeToggle" class="mode-btn" disabled>字幕模式</button>
+  <div class="container">
+    <div class="header">
+      <h1>VOA 新闻影子跟读</h1>
+      <div class="controls-top">
+        <div class="select-wrapper">
+          <select id="categorySelect"><option value="">加载分类...</option></select>
+        </div>
+        <div class="select-wrapper">
+          <select id="titleSelect" disabled><option value="">请选择文章标题</option></select>
+        </div>
+        <button id="modeToggle" class="reading-mode-btn" disabled>字幕模式</button>
+      </div>
+    </div>
+    <div id="currentFeed" class="current-feed"></div>
+    <div id="panel" class="content-area">
+      <div id="detail"><span class="loading">请选择分类与标题...</span></div>
+      <div id="subtitleLayer" class="subtitle-layer hidden">
+        <div id="subtitleCurrent" class="subtitle-line"></div>
+        <div id="subtitleNext" class="subtitle-line subtitle-next"></div>
+      </div>
+    </div>
   </div>
-  <div id="currentFeed"></div>
-  <div id="panel">
-    <div id="detail"><span class="loading">请选择分类与标题...</span></div>
-    <div id="subtitleLayer" class="subtitle-layer hidden">
-      <div id="subtitleCurrent" class="subtitle-line"></div>
-      <div id="subtitleNext" class="subtitle-line subtitle-next"></div>
+  <div class="floating-player" id="floatingPlayer" hidden>
+    <div class="no-media" id="noMediaMsg" hidden>无可用音频</div>
+    <div class="player-row">
+      <button class="play-btn" id="playBtn">▶</button>
+      <div class="progress-container">
+        <div class="time-bar">
+          <span id="currentTime">0:00</span>
+          <span id="totalTime">0:00</span>
+        </div>
+        <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="speed-control">
+        <button class="speed-btn" id="speedDown">−</button>
+        <div class="speed-display" id="speedDisplay">1.0×</div>
+        <button class="speed-btn" id="speedUp">+</button>
+      </div>
+      <div class="volume-control">
+        <button class="volume-btn" id="volumeBtn">🔊</button>
+        <div class="volume-slider" id="volumeSlider"><div class="volume-fill" id="volumeFill"></div></div>
+      </div>
     </div>
   </div>
   <script src="subtitles.js"></script>
+  <script src="text-cleaner.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

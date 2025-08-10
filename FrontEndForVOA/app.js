@@ -2,6 +2,18 @@
 const DEPLOY_URL = 'https://english-reading-app.tj15982183241.workers.dev';
 const API_BASE = DEPLOY_URL; // 固定后端地址
 
+// HTML 转义工具 (防止 XSS / 破坏 HTML)
+function escapeHtml(str){
+  if(str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[ch]);
+}
+
 // ===== DOM =====
 const categorySelect = document.getElementById('categorySelect');
 const titleSelect = document.getElementById('titleSelect');
@@ -57,21 +69,25 @@ async function loadArticle(url, fallbackTitle){
     const json=await res.json();
     if(!json.success) throw new Error(json.error||'文章获取失败');
     let { title, audio, text, html } = json.data;
+
+    if(text) text = TextCleaner.cleanArticleText(text);
+
     if(!text || text.trim().length < MODE_TEXT_THRESHOLD){
-      const extracted = fallbackExtractFromHtml(html||'');
+      const extracted = TextCleaner.fallbackExtractFromHtml(html||'');
       if(extracted.length>2) text = extracted.join('\n');
     }
+
+    if(text) text = TextCleaner.cleanArticleText(text);
+
     renderArticleShell(title||fallbackTitle, audio);
     if(text && text.trim().length >= MODE_TEXT_THRESHOLD){
-      buildSegmentDisplay(text, audio); // 全文 + 可切换
+      buildSegmentDisplay(text, audio);
+    } else if(text && text.trim().length){
+      buildSubtitleOnly(text, audio);
     } else {
-      if(text && text.trim().length){
-        buildSubtitleOnly(text, audio); // 仅字幕
-      } else {
-        const reader = document.getElementById('reader');
-        reader.textContent='没有内容，嘿嘿，自己打开浏览器或者手机自带的字幕功能吧！';
-        document.getElementById('modeToggle').disabled=true;
-      }
+      const reader = document.getElementById('reader');
+      reader.textContent='没有内容，嘿嘿，自己打开浏览器或者手机自带的字幕功能吧！';
+      document.getElementById('modeToggle').disabled=true;
     }
   }catch(e){
     detail.innerHTML='<p class="error">文章加载失败: '+escapeHtml(e.message)+'</p>';
@@ -79,11 +95,106 @@ async function loadArticle(url, fallbackTitle){
 }
 
 function renderArticleShell(title,audio){
-  detail.innerHTML = `<h3>${escapeHtml(title||'')}</h3>` +
-    (audio?`<audio id="articleAudio" controls src="${audio}"></audio>`:'<p class="error">未发现音频</p>')+
+  detail.innerHTML = `<h3 class="article-title">${escapeHtml(title||'')}</h3>` +
+    (audio
+      ? `<audio id="articleAudio" class="hidden-audio" src="${audio}"></audio>`
+      : `<p class="error">未发现音频</p>`) +
     `<div id="reader"></div>`;
+  if(audio) initFloatingPlayer(); else {
+    const fp=document.getElementById('floatingPlayer');
+    fp.hidden=false;
+    document.getElementById('noMediaMsg').hidden=false;
+  }
 }
 
+// 自定义浮动播放器 (每次文章切换重新绑定)
+function initFloatingPlayer(){
+  const audio = document.getElementById('articleAudio');
+  if(!audio) return;
+  const fp = document.getElementById('floatingPlayer');
+  const playBtn = document.getElementById('playBtn');
+  const curEl = document.getElementById('currentTime');
+  const totalEl = document.getElementById('totalTime');
+  const progressBar = document.getElementById('progressBar');
+  const progressFill = document.getElementById('progressFill');
+  const speedUp = document.getElementById('speedUp');
+  const speedDown = document.getElementById('speedDown');
+  const speedDisplay = document.getElementById('speedDisplay');
+  const volumeBtn = document.getElementById('volumeBtn');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeFill = document.getElementById('volumeFill');
+  document.getElementById('noMediaMsg').hidden = true;
+  fp.hidden = false;
+
+  // 清理旧监听(通过克隆元素最简方式)
+  function reset(el){ const newEl=el.cloneNode(true); el.parentNode.replaceChild(newEl, el); return newEl; }
+  // (可选) 若多次重复绑定造成累积, 可用上面 reset 技巧; 当前首次接管可忽略
+
+  function fmt(sec){
+    sec = Math.max(0, sec||0);
+    const m=Math.floor(sec/60), s=Math.floor(sec%60);
+    return m+':'+String(s).padStart(2,'0');
+  }
+
+  function update(){
+    if(isFinite(audio.duration)){
+      totalEl.textContent = fmt(audio.duration);
+      progressFill.style.width = (audio.currentTime/audio.duration*100)+'%';
+    }
+    curEl.textContent = fmt(audio.currentTime);
+  }
+
+  // 初始速度/音量
+  let rate = audio.playbackRate || 1.0;
+  function applyRate(){ audio.playbackRate = rate; speedDisplay.textContent = rate.toFixed(2)+'×'; }
+  applyRate();
+
+  let vol = audio.volume ?? 0.7;
+  audio.volume = vol;
+  volumeFill.style.width = (vol*100)+'%';
+  volumeBtn.textContent = vol===0?'🔇':(vol<0.5?'🔉':'🔊');
+
+  // 事件
+  playBtn.onclick = ()=>{
+    if(audio.paused){ audio.play(); playBtn.textContent='⏸'; }
+    else { audio.pause(); playBtn.textContent='▶'; }
+  };
+  audio.addEventListener('play', ()=> playBtn.textContent='⏸');
+  audio.addEventListener('pause', ()=> playBtn.textContent='▶');
+  audio.addEventListener('timeupdate', update);
+  audio.addEventListener('loadedmetadata', update);
+  audio.addEventListener('ended', ()=> playBtn.textContent='▶');
+
+  progressBar.onclick = (e)=>{
+    if(!isFinite(audio.duration)) return;
+    const rect=progressBar.getBoundingClientRect();
+    const ratio=(e.clientX-rect.left)/rect.width;
+    audio.currentTime = ratio*audio.duration;
+    update();
+  };
+
+  speedUp.onclick = ()=>{ if(rate<2){ rate+=0.25; applyRate(); } };
+  speedDown.onclick = ()=>{ if(rate>0.5){ rate-=0.25; applyRate(); } };
+
+  volumeSlider.onclick = (e)=>{
+    const rect=volumeSlider.getBoundingClientRect();
+    vol = (e.clientX-rect.left)/rect.width;
+    vol = Math.min(1, Math.max(0, vol));
+    audio.volume = vol;
+    volumeFill.style.width = (vol*100)+'%';
+    volumeBtn.textContent = vol===0?'🔇':(vol<0.5?'🔉':'🔊');
+  };
+  volumeBtn.onclick = ()=>{
+    if(vol>0){ vol=0; } else { vol=0.7; }
+    audio.volume = vol;
+    volumeFill.style.width = (vol*100)+'%';
+    volumeBtn.textContent = vol===0?'🔇':(vol<0.5?'🔉':'🔊');
+  };
+
+  update();
+}
+
+// === 补回: 分段显示(全文模式) 与 仅字幕模式 ===
 function buildSegmentDisplay(text,audio){
   const reader=document.getElementById('reader');
   const audioEl=document.getElementById('articleAudio');
@@ -103,7 +214,6 @@ function buildSegmentDisplay(text,audio){
     }
   });
 }
-
 function buildSubtitleOnly(text,audio){
   const reader=document.getElementById('reader');
   reader.style.display='none';
@@ -118,35 +228,8 @@ function buildSubtitleOnly(text,audio){
     onScrollCenter: ()=>{}
   });
   engine.setMode('subtitle');
-  document.getElementById('modeToggle').disabled=true; // 仅字幕不可切回
+  document.getElementById('modeToggle').disabled=true;
 }
-
-function fallbackExtractFromHtml(html){
-  if(!html) return [];
-  const out=[]; const re=/<p[^>]*>([\s\S]*?)<\/p>/gi; let m;
-  while((m=re.exec(html))){
-    let t=m[1]
-      .replace(/<script[\s\S]*?<\/script>/gi,'')
-      .replace(/<[^>]+>/g,'')
-      .replace(/&nbsp;/g,' ')
-      .replace(/&amp;/g,'&')
-      .replace(/&#39;/g,"'")
-      .replace(/&quot;/g,'"')
-      .trim();
-    if(!t) continue;
-    if(/wrote this story for voa learning english/i.test(t)) break;
-    if(/reported on this story for the associated press/i.test(t)) break;
-    if(/^words in this story/i.test(t)) break;
-    if(/^no media source currently available/i.test(t)) continue;
-    out.push(t);
-  }
-  return out;
-}
-
-// ===== 文本处理 =====
-function segmentText(txt){ txt=txt.trim(); if(!txt) return []; let parts=txt.split(/\n+/).flatMap(p=> p.split(/(?<=[.!?。！？])\s+/)); return parts.map(s=>s.trim()).filter(Boolean); }
-function cleanArticleText(txt){ if(!txt) return txt; let lines=txt.split(/\n+/).map(l=>l.trim()).filter(l=>l); while(lines.length && /^no media source currently available/i.test(lines[0])) lines.shift(); const vocabIdx=lines.findIndex(l=> /^words in this story/i.test(l) || /^_{5,}$/.test(l)); if(vocabIdx!==-1) lines=lines.slice(0,vocabIdx); lines=lines.filter(l=> !/\s–\s*(n|v|adj|adv|pron|prep|conj|det|num)\./i.test(l)); const tailPatterns=[ /wrote this story for voa learning english/i, /reported on this story for the associated press/i, /adapted it for voa learning english/i, /adapted it\.?$/i ]; let cutIndex=-1; for(let i=0;i<lines.length;i++){ if(tailPatterns.some(p=>p.test(lines[i]))){ cutIndex=i; break; } } if(cutIndex!==-1) lines=lines.slice(0,cutIndex); return lines.join('\n'); }
-function escapeHtml(str){ return str.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 
 // ===== 启动 =====
 loadCategories();
