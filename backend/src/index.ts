@@ -484,115 +484,11 @@ app.get('/api/info', (c) => {
   })
 })
 
-// VOA 代理/提要和文章提取端点
-app.get('/api/voa/feed', async (c) => {
-  try {
-    const FEED_URL = 'https://learningenglish.voanews.com/api/zbmroml-vomx-tpeqboo_'
-    const resp = await fetch(FEED_URL, { headers: { 'User-Agent': 'Mozilla/5.0 VOAFetcher/1.0' } })
-    if (!resp.ok) return c.json({ success: false, error: 'Upstream feed fetch failed ' + resp.status }, 502)
-    const xml = await resp.text()
-    // 简易解析 (避免在 Worker 里依赖 DOMParser)
-    const items: { title: string; link: string }[] = []
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g
-    let m: RegExpExecArray | null
-    while ((m = itemRegex.exec(xml))) {
-      const block = m[1]
-      const t = /<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title>([\s\S]*?)<\/title>/.exec(block)
-      const l = /<link>(.*?)<\/link>/.exec(block)
-      const title = (t && (t[1] || t[2]) || '').trim()
-      const link = (l && l[1] || '').trim()
-      if (title && link) items.push({ title, link })
-    }
-    return c.json({ success: true, data: items })
-  } catch (err: any) {
-    console.error('VOA feed error', err)
-    return c.json({ success: false, error: 'Feed fetch error: ' + err.message }, 500)
-  }
-})
+// ===== VOA Feed Whitelist 等 VOA 路由已抽离到 handlers/voa.ts =====
+import { registerVoaRoutes } from './handlers/voa'
 
-app.get('/api/voa/article', async (c) => {
-  try {
-    const url = c.req.query('url')
-    if (!url || !/^https?:\/\//.test(url)) return c.json({ success: false, error: 'Valid url param required' }, 400)
-    const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 VOAArticleFetcher/1.1' } })
-    if (!resp.ok) return c.json({ success: false, error: 'Upstream article fetch failed ' + resp.status }, 502)
-    const html = await resp.text()
-
-    // ------------- 标题 -------------
-    let title = ''
-    const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i)
-    if (titleMatch) title = titleMatch[1].replace(/\s+\|\s*Voice of America.*/i, '').trim()
-
-    // ------------- 音频（优先高码率 data-sources JSON 内 _hq） -------------
-    let audio = ''
-    // data-sources="[...]"
-    const dataSourcesMatch = html.match(/data-sources="([^"]+)"/i)
-    if (dataSourcesMatch) {
-      try {
-        const jsonTxt = dataSourcesMatch[1].replace(/&quot;/g, '"')
-        const arr = JSON.parse(jsonTxt)
-        if (Array.isArray(arr) && arr.length) {
-          // 简单找含 _hq 或 128 kbps
-            const hq = arr.find(o => /hq\.mp3/i.test(o.Src || o.AmpSrc || '')) || arr.find(o => /128 kbps/i.test(o.DataInfo||'')) || arr[0]
-            audio = (hq.Src || hq.AmpSrc || '').trim()
-        }
-      } catch {}
-    }
-    if (!audio) {
-      const audioTag = html.match(/<audio[^>]+src="([^"']+\.mp3)"/i)
-      if (audioTag) audio = audioTag[1]
-    }
-    if (!audio) {
-      const mp3 = html.match(/https?:\/\/[^"'<>]+\.mp3/)
-      if (mp3) audio = mp3[0]
-    }
-
-    // ------------- 正文提取 -------------
-    // 方案: 定位 id="article-content" 起始，再到 comments/Related/</main> 等结束标记
-    const startIdx = html.indexOf('id="article-content"')
-    let text = ''
-    if (startIdx !== -1) {
-      const tail = html.slice(startIdx)
-      // 结束标记候选
-      const endMarkers = [ 'id="comments"', 'class="comments', 'class="media-block-wrap', '</main>' ]
-      let endPos = tail.length
-      for (const mk of endMarkers) {
-        const p = tail.indexOf(mk)
-        if (p !== -1 && p < endPos) endPos = p
-      }
-      let section = tail.slice(0, endPos)
-
-      // 去掉脚本/样式/quiz/comments 片段/下载块
-      section = section
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<div[^>]+class="[^"]*quiz[^"]*"[\s\S]*?<\/div>/gi, '')
-        .replace(/<div[^>]+class="[^"]*(media-download|share|comments)[^"]*"[\s\S]*?<\/div>/gi, '')
-
-      // 收集 <p> 段落
-      const paragraphs: string[] = []
-      const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi
-      let pm: RegExpExecArray | null
-      while ((pm = pRegex.exec(section))) {
-        let raw = pm[1]
-        // 跳过空或仅下划线行
-        if (/^\s*(__+|\*{3,})\s*$/i.test(raw)) continue
-        raw = raw.replace(/<[^>]+>/g, ' ') // 去内部标签
-        raw = decodeHtml(raw)
-        raw = raw.replace(/\s+/g, ' ').trim()
-        if (raw) paragraphs.push(raw)
-      }
-      text = paragraphs.join('\n\n')
-    }
-
-    if (!text) text = '正文抓取失败。'
-
-    return c.json({ success: true, data: { title, audio, text, source: url, wordCount: text === '正文抓取失败。' ? 0 : text.split(/\s+/).length } })
-  } catch (err: any) {
-    console.error('VOA article error', err)
-    return c.json({ success: false, error: 'Article fetch error: ' + err.message }, 500)
-  }
-})
+// 在文件末尾 (export default app 之前) 注册 VOA 路由
+registerVoaRoutes(app)
 
 // 简易 HTML 实体解码
 function decodeHtml(str: string): string {

@@ -4,74 +4,186 @@
   <meta charset="UTF-8">
   <title>VOA 新闻影子跟读简易版</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f6f8fc; margin: 30px; }
-    h2 { color: #1557bf; margin-bottom: 8px; }
-    #list { margin-bottom: 30px; display:flex; flex-direction:column; gap:6px; }
-    #list button { background:#fff; border:1px solid #def; padding:8px 15px; cursor:pointer; font-size:1em; border-radius:6px; text-align:left; }
-    #list button:hover { background:#e6f1ff; }
-    #detail { background:#fff; box-shadow:0 2px 8px #dde5eb; border-radius:10px; padding:25px; }
-    audio { width:100%; margin:12px 0; }
-    .error { color:#c62828; }
-    .loading { color:#666; font-style:italic; }
-    #search { margin:0 0 20px 0; display:flex; gap:8px; }
-    #search input { flex:1; padding:8px 10px; border:1px solid #ccd; border-radius:6px; }
-    #search button { padding:8px 15px; border:1px solid #1557bf; background:#1557bf; color:#fff; border-radius:6px; cursor:pointer; }
-    #search button:hover { background:#0d3d89; }
-    #apiInfo { font-size:12px; color:#555; margin-bottom:10px; }
-    #apiInfo input { width:320px; padding:4px 6px; font-size:12px; }
-    #apiInfo button { padding:4px 8px; font-size:12px; margin-left:4px; }
-    .segments { font-size:1.05em; line-height:1.55; }
+    body { font-family: Arial, sans-serif; background:#f6f8fc; margin:26px; color:#222;}
+    h2 { color:#1557bf; margin:0 0 14px;}
+    .top-bar { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:14px;}
+    .top-bar select { padding:6px 10px; border:1px solid #bcd; border-radius:8px; background:#fff; min-width:240px; font-size:14px;}
+    .top-bar select:disabled { background:#eee; color:#888; }
+    #apiInfo { font-size:12px; color:#555; margin-left:auto; display:flex; gap:4px; align-items:center;}
+    #apiInfo input { width:220px; padding:4px 6px; font-size:12px; }
+    #apiInfo button { padding:4px 8px; font-size:12px; }
+    #panel { background:#fff; box-shadow:0 2px 8px #dde5eb; border-radius:14px; padding:20px 22px; }
+    audio { width:100%; margin:4px 0 18px; }
+    #reader { font-size:1.05em; line-height:1.55; max-height:55vh; overflow-y:auto; padding:4px 6px; border:1px solid #e3e8ef; border-radius:12px; }
     .seg { padding:2px 3px; border-radius:4px; transition:background .25s, color .25s; display:inline; }
     .seg + .seg { margin-left:2px; }
     .seg.active { background:#ffe58f; box-shadow:0 0 0 2px #ffd666 inset; }
     .seg.past { color:#666; }
-    #detail { scroll-behavior:smooth; }
+    .loading { color:#666; font-style:italic; }
+    .error { color:#c62828; }
+    #currentFeed { font-size:12px; color:#555; margin:0 0 6px; }
+    @media (max-width:680px){
+      .top-bar { flex-direction:column; align-items:stretch; }
+      #apiInfo { width:100%; justify-content:flex-start; margin-left:0;}
+    }
   </style>
 </head>
 <body>
-  <h2>VOA 新闻列表</h2>
-  <div id="search">
-    <input id="kw" placeholder="关键词过滤 (前端本地过滤)" />
-    <button id="refresh">刷新</button>
+  <h2>VOA 新闻影子跟读</h2>
+  <div class="top-bar">
+    <select id="categorySelect">
+      <option value="">加载分类...</option>
+    </select>
+    <select id="titleSelect" disabled>
+      <option value="">请选择文章标题</option>
+    </select>
+    <div id="apiInfo">
+      <span>Backend:</span>
+      <input id="apiBaseInput" />
+      <button id="applyApi">切换</button>
+      <span id="apiStatus"></span>
+    </div>
   </div>
-  <div id="apiInfo">Backend: <input id="apiBaseInput" /> <button id="applyApi">切换</button> <span id="apiStatus"></span></div>
-  <div id="list">正在加载新闻列表……</div>
-  <div id="detail"></div>
+  <div id="currentFeed"></div>
+  <div id="panel">
+    <div id="detail"><span class="loading">请选择分类与标题...</span></div>
+  </div>
 
 <script>
 // ====== API 基础地址 ======
 const DEPLOY_URL = 'https://english-reading-app.tj15982183241.workers.dev';
-let API_BASE = DEPLOY_URL;
-const saved = localStorage.getItem('api_base_override');
-if (saved) API_BASE = saved;
+let API_BASE = localStorage.getItem('api_base_override') || DEPLOY_URL;
 const apiInput = document.getElementById('apiBaseInput');
 apiInput.value = API_BASE;
-function setApiStatus(msg, ok=true){ const span=document.getElementById('apiStatus'); span.textContent=msg; span.style.color= ok?'#2e7d32':'#c62828'; }
-
+function setApiStatus(msg, ok=true){
+  const span=document.getElementById('apiStatus');
+  span.textContent=msg;
+  span.style.color= ok?'#2e7d32':'#c62828';
+}
 document.getElementById('applyApi').onclick = async () => {
   const val = apiInput.value.trim().replace(/\/$/, '');
   if(!val) return; setApiStatus('测试中...');
-  try { const r = await fetch(val + '/api/voa/feed'); if(!r.ok) throw new Error(r.status); API_BASE=val; localStorage.setItem('api_base_override', API_BASE); setApiStatus('已切换'); loadFeed(); } catch(e){ setApiStatus('不可用:'+e.message,false);} };
+  try {
+    const r = await fetch(val + '/api/voa/feeds');
+    if(!r.ok) throw new Error(r.status);
+    API_BASE=val;
+    localStorage.setItem('api_base_override', API_BASE);
+    setApiStatus('已切换');
+    loadCategories(true);
+  } catch(e){ setApiStatus('不可用:'+e.message,false); }
+};
 
-let FEED_CACHE = [];
-async function loadFeed(){
-  const listDiv = document.getElementById('list');
-  listDiv.innerHTML = '<span class="loading">加载中...</span>';
-  try { const res = await fetch(API_BASE + '/api/voa/feed'); const json = await res.json(); if(!json.success) throw new Error(json.error||'Feed 获取失败'); FEED_CACHE = json.data; renderFeed(); } catch(e){ listDiv.innerHTML='<span class="error">列表加载失败: '+e.message+'</span>'; }
-}
-function renderFeed(){
-  const kw = document.getElementById('kw').value.trim().toLowerCase();
-  const listDiv = document.getElementById('list'); listDiv.innerHTML='';
-  const filtered = FEED_CACHE.filter(it=>!kw || it.title.toLowerCase().includes(kw));
-  if(!filtered.length){ listDiv.textContent='无结果'; return; }
-  filtered.forEach(item=>{ const btn=document.createElement('button'); btn.textContent=item.title; btn.onclick=()=>loadArticle(item.link, item.title); listDiv.appendChild(btn); });
-}
-document.getElementById('kw').addEventListener('input', renderFeed);
-document.getElementById('refresh').addEventListener('click', loadFeed);
+// ===== 数据状态 =====
+let CATEGORIES=[];            // {title,url}[]
+let FEED_ITEMS=[];            // 当前分类 feed items
+let CURRENT_FEED_URL='';
+let CURRENT_CATEGORY_INDEX=-1;
 
-// 文章加载 + 高亮
+// ===== DOM 引用 =====
+const categorySelect = document.getElementById('categorySelect');
+const titleSelect = document.getElementById('titleSelect');
+const detail = document.getElementById('detail');
+
+categorySelect.addEventListener('change', () => {
+  const idx = parseInt(categorySelect.value,10);
+  if(isNaN(idx) || idx<0) return;
+  selectCategory(idx);
+});
+titleSelect.addEventListener('change', () => {
+  const idx = parseInt(titleSelect.value,10);
+  if(isNaN(idx) || idx<0) return;
+  const item = FEED_ITEMS[idx];
+  if(item) loadArticle(item.link, item.title);
+});
+
+// ===== 分类加载 =====
+async function loadCategories(force=false){
+  if(CATEGORIES.length && !force){
+    renderCategorySelect();
+    return;
+  }
+  categorySelect.innerHTML='<option value="">加载分类...</option>';
+  categorySelect.disabled = true;
+  try {
+    const res = await fetch(API_BASE + '/api/voa/feeds');
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error||'分类获取失败');
+    CATEGORIES = json.data || [];
+    if(!Array.isArray(CATEGORIES) || !CATEGORIES.length) throw new Error('空分类');
+    renderCategorySelect();
+  } catch(e){
+    categorySelect.innerHTML='<option value="">加载失败</option>';
+    console.error(e);
+  } finally {
+    categorySelect.disabled=false;
+  }
+}
+function renderCategorySelect(){
+  categorySelect.innerHTML = '<option value="">选择分类</option>' +
+    CATEGORIES.map((c,i)=> `<option value="${i}">${escapeHtml(c.title)}</option>`).join('');
+  // 默认选择第一项
+  if(CATEGORIES.length){
+    categorySelect.value='0';
+    selectCategory(0);
+  }
+}
+
+// ===== 分类选择 → 加载 Feed =====
+async function selectCategory(index){
+  if(index<0 || index>=CATEGORIES.length) return;
+  CURRENT_CATEGORY_INDEX = index;
+  const feed = CATEGORIES[index];
+  document.getElementById('currentFeed').textContent = '当前分类: ' + feed.title;
+  titleSelect.disabled=true;
+  titleSelect.innerHTML='<option value="">加载文章列表...</option>';
+  detail.innerHTML='<span class="loading">等待选择文章...</span>';
+  await loadFeed(feed.url);
+}
+
+async function loadFeed(feedUrl){
+  try {
+    const qs = feedUrl ? ('?feed=' + encodeURIComponent(feedUrl)) : '';
+    const res = await fetch(API_BASE + '/api/voa/feed' + qs);
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error||'Feed 获取失败');
+    const rawItems = (json.data && json.data.items) || [];
+    // 去重：规范化 link + 标题
+    const seen = new Set();
+    const dedup = [];
+    for(const it of rawItems){
+      const normLink = (it.link||'').replace(/[?#].*$/, '').toLowerCase();
+      const key = normLink || ('t:' + (it.title||'').toLowerCase());
+      if(!seen.has(key) && it.title){
+        seen.add(key);
+        dedup.push(it);
+      }
+    }
+    FEED_ITEMS = dedup;
+    CURRENT_FEED_URL = json.data.feedUrl;
+    renderTitleSelect();
+  } catch(e){
+    titleSelect.innerHTML='<option value="">文章列表加载失败</option>';
+    console.error(e);
+  }
+}
+
+function renderTitleSelect(){
+  if(!FEED_ITEMS.length){
+    titleSelect.innerHTML='<option value="">无文章</option>';
+    titleSelect.disabled=true;
+    return;
+  }
+  titleSelect.disabled=false;
+  titleSelect.innerHTML='<option value="">选择文章标题</option>' +
+    FEED_ITEMS.map((it,i)=> `<option value="${i}">${escapeHtml(it.title)}</option>`).join('');
+  // 可选择默认第一篇:
+  titleSelect.value='0';
+  const first = FEED_ITEMS[0];
+  if(first) loadArticle(first.link, first.title);
+}
+
+// ===== 文章加载 + 估算时间高亮 =====
 async function loadArticle(url, fallbackTitle){
-  const detail = document.getElementById('detail');
   detail.innerHTML='<div class="loading">抓取文章...</div>';
   try {
     const res = await fetch(API_BASE + '/api/voa/article?url=' + encodeURIComponent(url));
@@ -81,56 +193,128 @@ async function loadArticle(url, fallbackTitle){
     const cleaned = cleanArticleText(text||'');
     detail.innerHTML = `<h3>${escapeHtml(title||fallbackTitle)}</h3>` +
       (audio?`<audio id="articleAudio" controls src="${audio}"></audio>`:'<p class="error">未发现音频</p>')+
-      `<div id="reader" class="segments"></div>`;
+      `<div id="reader"></div>`;
     const reader = document.getElementById('reader');
     const audioEl = document.getElementById('articleAudio');
     const segments = segmentText(cleaned);
     if(!segments.length){ reader.textContent='（无文本）'; return; }
     const lengths = segments.map(s=> s.replace(/\s+/g,' ').length || 1);
     const total = lengths.reduce((a,b)=>a+b,0);
-    const spanList=[]; segments.forEach((seg,i)=>{ const sp=document.createElement('span'); sp.className='seg'; sp.dataset.index=i; sp.textContent=seg+' '; reader.appendChild(sp); spanList.push(sp); });
-    let timings=[]; function build(){ if(!audioEl || !isFinite(audioEl.duration)) return; let acc=0; timings=lengths.map(len=>{ const start= acc/total * audioEl.duration; acc+=len; const end= acc/total * audioEl.duration; return {start,end}; }); }
-    if(audioEl){ if(audioEl.readyState>=1) build(); audioEl.addEventListener('loadedmetadata', build); }
-    let current=-1, lastScroll=0;
-    function highlight(t){ if(!timings.length) return; if(current>=0){ const c=timings[current]; if(t>=c.start && t<c.end) return; }
-      // 二分
-      let lo=0,hi=timings.length-1,idx=-1; while(lo<=hi){ const mid=(lo+hi)>>1; if(t<timings[mid].start) hi=mid-1; else if(t>=timings[mid].end) lo=mid+1; else { idx=mid; break; } }
-      if(idx===-1) return; if(idx!==current){ if(current>=0) spanList[current].classList.remove('active'); for(let i=0;i<idx;i++) spanList[i].classList.add('past'); spanList[idx].classList.add('active'); current=idx; const now=performance.now(); if(now-lastScroll>300){ lastScroll=now; spanList[idx].scrollIntoView({block:'center', behavior:'smooth'}); } }
+    const spanList=[];
+    segments.forEach((seg,i)=>{
+      const sp=document.createElement('span');
+      sp.className='seg';
+      sp.dataset.index=i;
+      sp.textContent=seg+' ';
+      reader.appendChild(sp);
+      spanList.push(sp);
+    });
+    let timings=[];
+    function build(){
+      if(!audioEl || !isFinite(audioEl.duration)) return;
+      let acc=0;
+      timings = lengths.map(len=>{
+        const start = acc/total * audioEl.duration;
+        acc+=len;
+        const end = acc/total * audioEl.duration;
+        return {start,end};
+      });
     }
-    if(audioEl){ audioEl.addEventListener('timeupdate', ()=>highlight(audioEl.currentTime)); let raf; (function loop(){ if(audioEl && !audioEl.paused) highlight(audioEl.currentTime); raf=requestAnimationFrame(loop); })(); audioEl.addEventListener('ended', ()=>cancelAnimationFrame(raf)); }
-    reader.addEventListener('click', e=>{ let el=e.target; while(el && el!==reader && !el.classList.contains('seg')) el=el.parentNode; if(!el||!el.classList.contains('seg')) return; const idx=parseInt(el.dataset.index,10); if(!timings[idx]) return; audioEl.currentTime = timings[idx].start + .01; highlight(audioEl.currentTime); });
-  } catch(e){ detail.innerHTML='<p class="error">文章加载失败: '+escapeHtml(e.message)+'</p>'; }
+    if(audioEl){
+      if(audioEl.readyState>=1) build();
+      audioEl.addEventListener('loadedmetadata', build);
+    }
+    let current=-1,lastScroll=0;
+    function highlight(t){
+      if(!timings.length) return;
+      if(current>=0){
+        const c=timings[current];
+        if(t>=c.start && t<c.end) return;
+      }
+      // 二分查找
+      let lo=0,hi=timings.length-1,idx=-1;
+      while(lo<=hi){
+        const mid=(lo+hi)>>1;
+        if(t<timings[mid].start) hi=mid-1;
+        else if(t>=timings[mid].end) lo=mid+1;
+        else { idx=mid; break; }
+      }
+      if(idx===-1) return;
+      if(idx!==current){
+        if(current>=0) spanList[current].classList.remove('active');
+        for(let i=0;i<idx;i++) spanList[i].classList.add('past');
+        spanList[idx].classList.add('active');
+        current=idx;
+        const now=performance.now();
+        if(now-lastScroll>300){
+          lastScroll=now;
+            // 滚动 reader 容器 (保持中间)
+          const rRect=reader.getBoundingClientRect();
+          const sRect=spanList[idx].getBoundingClientRect();
+          const offset = (sRect.top - rRect.top) - (rRect.height/2 - sRect.height/2);
+          reader.scrollBy({top:offset, behavior:'smooth'});
+        }
+      }
+    }
+    if(audioEl){
+      audioEl.addEventListener('timeupdate', ()=>highlight(audioEl.currentTime));
+      let raf;
+      (function loop(){
+        if(audioEl && !audioEl.paused) highlight(audioEl.currentTime);
+        raf=requestAnimationFrame(loop);
+      })();
+      audioEl.addEventListener('ended', ()=>cancelAnimationFrame(raf));
+    }
+    reader.addEventListener('click', e=>{
+      let el=e.target;
+      while(el && el!==reader && !el.classList.contains('seg')) el=el.parentNode;
+      if(!el||!el.classList.contains('seg')) return;
+      const idx=parseInt(el.dataset.index,10);
+      if(!timings[idx]) return;
+      const target = timings[idx].start + .01;
+      if(audioEl) { audioEl.currentTime=target; highlight(target); audioEl.play(); }
+    });
+  } catch(e){
+    detail.innerHTML='<p class="error">文章加载失败: '+escapeHtml(e.message)+'</p>';
+  }
 }
 
+// ===== 文本处理 =====
 function segmentText(txt){
-  txt=txt.trim(); if(!txt) return [];
-  // 先换行拆, 再按句末标点拆
+  txt=txt.trim();
+  if(!txt) return [];
   let parts = txt.split(/\n+/).flatMap(p=> p.split(/(?<=[.!?。！？])\s+/));
-  return parts.map(s=>s.trim()).filter(s=>s.length>0);
+  return parts.map(s=>s.trim()).filter(Boolean);
 }
-
 function cleanArticleText(txt){
   if(!txt) return txt;
   let lines = txt.split(/\n+/).map(l=>l.trim()).filter(l=>l);
+  // 去掉开头无用提示
   while(lines.length && /^no media source currently available/i.test(lines[0])) lines.shift();
-  // 截断词汇/下划线
+  // 词汇表/下划线截断
   const vocabIdx = lines.findIndex(l=> /^words in this story/i.test(l) || /^_{5,}$/.test(l));
   if(vocabIdx!==-1) lines = lines.slice(0, vocabIdx);
-  // 去词性释义行
+  // 去词性释义行 (词汇表模式残留)
   lines = lines.filter(l=> !/\s–\s*(n|v|adj|adv|pron|prep|conj|det|num)\./i.test(l));
-  // 从作者署名起截断
-  const creditIdx = lines.findIndex(l=> /wrote this story for voa learning english/i.test(l));
-  if(creditIdx!==-1) lines = lines.slice(0, creditIdx);
-  else {
-    const adaptedIdx = lines.findIndex(l=> /adapted it\.?$/i.test(l));
-    if(adaptedIdx!==-1) lines = lines.slice(0, adaptedIdx);
+  // 版权/署名尾部截断模式集合 (找到最早出现的行并截断之前)
+  const tailPatterns = [
+    /wrote this story for voa learning english/i,
+    /reported on this story for the associated press/i,
+    /adapted it for voa learning english/i,
+    /adapted it\.?$/i
+  ];
+  let cutIndex = -1;
+  for (let i=0; i<lines.length; i++) {
+    const line = lines[i];
+    if (tailPatterns.some(p=> p.test(line))) { cutIndex = i; break; }
   }
+  if (cutIndex !== -1) lines = lines.slice(0, cutIndex);
   return lines.join('\n');
 }
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
-function escapeHtml(str){ return str.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
-
-loadFeed();
+// ===== 启动 =====
+loadCategories();
 </script>
-</body>
-</html>

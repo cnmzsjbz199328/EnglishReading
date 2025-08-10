@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VOA 新闻影子跟读</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>VOA 新闻影子跟读</h2>
+  <div class="top-bar">
+    <select id="categorySelect"><option value="">加载分类...</option></select>
+    <select id="titleSelect" disabled><option value="">请选择文章标题</option></select>
+    <button id="modeToggle" class="mode-btn" disabled>字幕模式</button>
+  </div>
+  <div id="currentFeed"></div>
+  <div id="panel">
+    <div id="detail"><span class="loading">请选择分类与标题...</span></div>
+    <div id="subtitleLayer" class="subtitle-layer hidden">
+      <div id="subtitleCurrent" class="subtitle-line"></div>
+      <div id="subtitleNext" class="subtitle-line subtitle-next"></div>
+    </div>
+  </div>
+  <script src="subtitles.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
