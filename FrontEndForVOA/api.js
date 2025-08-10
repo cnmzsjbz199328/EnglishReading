@@ -1,5 +1,5 @@
 // 负责与后端交互的 API 模块
-const DEPLOY_URL = 'https://english-reading-app.tj15982183241.workers.dev';
+const DEPLOY_URL = 'https://englishreadingapp.badtom.dpdns.org';
 const API_BASE = DEPLOY_URL;
 
 window.Api = {

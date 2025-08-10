@@ -50,56 +50,47 @@ select:disabled{opacity:.55;cursor:not-allowed;}
 .no-media{font-size:14px;color:rgba(255,255,255,.6);margin-right:14px;}
 .hidden-audio{display:none !important;}
 @media (max-width:860px){.floating-player{min-width:0;width:92%;left:50%;transform:translateX(-50%);padding:16px 18px;}.player-row{flex-wrap:wrap;gap:12px;}.progress-container{order:3;width:100%;}}
-@media (max-width:620px){select{min-width:170px;}.header h1{font-size:1.9em;}.subtitle-layer{font-size:18px;padding:24px 22px 30px;}#reader{max-height:45vh;}}
+@media (max-width:620px){.header h1{font-size:1.9em;}.subtitle-layer{font-size:18px;padding:24px 22px 30px;}#reader{max-height:45vh;}}
 /* 旧类兼容 */
 .top-bar{display:none;} /* 隐藏旧布局 */
 .mode-btn{display:none;}
 
 /* ====== 更细致的小尺寸适配 ====== */
 @media (max-width:540px){
-  .container{padding:16px 14px 140px;}
-  .header{padding:18px 16px 22px;margin-bottom:20px;border-radius:20px;}
-  .header h1{font-size:clamp(1.45rem,5.3vw,1.9rem);margin-bottom:14px;}
-  .controls-top{gap:10px;}
-  select{width:170px;padding:10px 38px 10px 14px;font-size:13px;border-radius:12px;}
-  .reading-mode-btn{padding:10px 18px;font-size:13px;border-radius:12px;}
-  #detail h3{font-size:1.45em;margin-bottom:14px;}
-  #reader{max-height:52vh;padding:10px 14px;font-size:.95em;line-height:1.6;border-radius:14px;}
-  .subtitle-layer{padding:20px 18px 26px;font-size:17px;line-height:1.45;border-radius:18px;}
-  .subtitle-next{margin-top:10px;font-size:.85em;}
-  .floating-player{
-    width:100%;
-    left:50%;transform:translateX(-50%);
-    bottom:12px;
-    padding:14px 14px;
-    border-radius:18px;
-    min-width:0;
-    font-size:13px;
-  }
-  .player-row{flex-wrap:wrap;gap:10px;}
-  .play-btn{width:52px;height:52px;font-size:20px;}
-  .speed-control,.volume-control{padding:6px 8px;gap:6px;}
-  .speed-display{min-width:40px;font-size:12px;}
-  .volume-slider{width:60px;}
+  .container{padding:14px 12px 138px;}
+  .header{padding:16px 14px 20px;margin-bottom:18px;border-radius:20px;}
+  .header h1{font-size:clamp(1.35rem,5.2vw,1.85rem);margin-bottom:12px;}
+  /* Single row controls (allow horizontal scroll if overflow) */
+  .controls-top{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:8px;justify-content:flex-start;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
+  .controls-top::-webkit-scrollbar{height:6px;}
+  .controls-top::-webkit-scrollbar-track{background:transparent;}
+  .controls-top::-webkit-scrollbar-thumb{background:rgba(255,255,255,.35);border-radius:3px;}
+  .controls-top > .select-wrapper{flex:1 1 0;min-width:0;}
+  select{width:100%;max-width:none;padding:8px 30px 8px 10px;font-size:13px;border-radius:12px;}
+  /* Icon button for mode toggle */
+  #modeToggle.reading-mode-btn{flex:0 0 auto;font-size:0;text-indent:-9999px;overflow:hidden;padding:0;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;border:none;outline:none;}
+  #modeToggle.reading-mode-btn::after{content:"CC";font-size:13px;font-weight:600;letter-spacing:1px;color:#667eea;text-indent:0;}
+  #modeToggle.reading-mode-btn.active::after{color:#fff;}
+  #detail h3{font-size:1.4em;margin-bottom:12px;}
+  #reader{max-height:54vh;padding:10px 12px;font-size:.94em;line-height:1.58;border-radius:14px;}
+  .subtitle-layer{padding:18px 16px 24px;font-size:16.5px;line-height:1.42;border-radius:18px;}
+  .subtitle-next{margin-top:8px;font-size:.83em;}
+  .floating-player{width:100%;left:50%;transform:translateX(-50%);bottom:10px;padding:12px 12px;border-radius:18px;min-width:0;font-size:12.5px;}
+  .player-row{flex-wrap:wrap;gap:8px;}
+  .play-btn{width:50px;height:50px;font-size:19px;}
+  .speed-control,.volume-control{padding:6px 6px;gap:6px;}
+  .speed-display{min-width:38px;font-size:11.5px;}
+  .volume-slider{width:58px;}
   .progress-container{gap:4px;}
   .progress-bar{height:6px;}
-  .progress-fill::after{width:12px;height:12px;}
+  .progress-fill::after{width:11px;height:11px;}
 }
-
+/* Ensure still row & wrapping option at <=430px (icon smaller) */
 @media (max-width:430px){
-  select{width:150px;}
-  .controls-top{flex-direction:column;align-items:stretch;}
-  .reading-mode-btn{width:100%;}
-  #reader{max-height:48vh;}
-  .floating-player{
-    flex-direction:column;
-    align-items:stretch;
-  }
-  .player-row{flex-direction:row;}
-  .play-btn{width:48px;height:48px;font-size:18px;}
-  .speed-control,.volume-control{font-size:12px;}
+  #modeToggle.reading-mode-btn{width:38px;height:38px;border-radius:10px;border:none;outline:none;}
+  select{font-size:12.5px;padding:7px 28px 7px 9px;}
+  .play-btn{width:46px;height:46px;font-size:18px;}
 }
-
 @media (max-width:370px){
   .header h1{font-size:1.35rem;}
   select{width:100%;}
