@@ -32,8 +32,17 @@ function renderCategorySelect(){
 }
 
 async function selectCategory(index){
-  if(index<0 || index>=CATEGORIES.length) return; CURRENT_CATEGORY_INDEX=index; const feed=CATEGORIES[index];
-  document.getElementById('currentFeed').textContent='当前分类: '+feed.title; titleSelect.disabled=true; titleSelect.innerHTML='<option value="">加载文章列表...</option>'; detail.innerHTML='<span class="loading">等待选择文章...</span>'; await loadFeed(feed.url); }
+  if(index<0 || index>=CATEGORIES.length) return;
+  CURRENT_CATEGORY_INDEX = index;
+  const feed = CATEGORIES[index];
+  // 不再显示当前分类前缀或标题
+  const cf = document.getElementById('currentFeed');
+  if(cf) cf.textContent = '';
+  titleSelect.disabled = true;
+  titleSelect.innerHTML = '<option value="">加载文章列表...</option>';
+  detail.innerHTML = '<span class="loading">等待选择文章...</span>';
+  await loadFeed(feed.url);
+}
 
 async function loadFeed(feedUrl){
   try { const feedData = await Api.fetchFeedItems(feedUrl); const raw=(feedData&&feedData.items)||[]; const seen=new Set(); const dedup=[]; for(const it of raw){ const norm=(it.link||'').replace(/[?#].*$/,'').toLowerCase(); const key= norm || ('t:'+ (it.title||'').toLowerCase()); if(!seen.has(key) && it.title){ seen.add(key); dedup.push(it);} } FEED_ITEMS=dedup; CURRENT_FEED_URL=feedData.feedUrl; renderTitleSelect(); }
