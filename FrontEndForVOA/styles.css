@@ -27,7 +27,7 @@ select:disabled{opacity:.55;cursor:not-allowed;}
 .subtitle-next{opacity:.55;font-size:.9em;margin-top:14px;}
 .subtitle-highlight{background:#ffe58f;color:#222;padding:4px 6px;border-radius:8px;}
 /* 浮动播放器 */
-.floating-player{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-radius:22px;padding:18px 26px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35);min-width:480px;z-index:1000;animation:slideUp .5s ease;font-size:14px;}
+.floating-player{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-radius:22px;padding:18px 26px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35);min-width:480px;z-index:1000;animation:slideUp .5s ease;font-size:14px;opacity: 0.8;}
 @keyframes slideUp{from{opacity:0;transform:translate(-50%,20px);}to{opacity:1;transform:translate(-50%,0);}}
 .player-row{display:flex;align-items:center;gap:18px;}
 .play-btn{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(102,126,234,.45);transition:.28s;}
@@ -54,3 +54,76 @@ select:disabled{opacity:.55;cursor:not-allowed;}
 /* 旧类兼容 */
 .top-bar{display:none;} /* 隐藏旧布局 */
 .mode-btn{display:none;}
+
+/* ====== 更细致的小尺寸适配 ====== */
+@media (max-width:540px){
+  .container{padding:16px 14px 140px;}
+  .header{padding:18px 16px 22px;margin-bottom:20px;border-radius:20px;}
+  .header h1{font-size:clamp(1.45rem,5.3vw,1.9rem);margin-bottom:14px;}
+  .controls-top{gap:10px;}
+  select{width:170px;padding:10px 38px 10px 14px;font-size:13px;border-radius:12px;}
+  .reading-mode-btn{padding:10px 18px;font-size:13px;border-radius:12px;}
+  #detail h3{font-size:1.45em;margin-bottom:14px;}
+  #reader{max-height:52vh;padding:10px 14px;font-size:.95em;line-height:1.6;border-radius:14px;}
+  .subtitle-layer{padding:20px 18px 26px;font-size:17px;line-height:1.45;border-radius:18px;}
+  .subtitle-next{margin-top:10px;font-size:.85em;}
+  .floating-player{
+    width:100%;
+    left:50%;transform:translateX(-50%);
+    bottom:12px;
+    padding:14px 14px;
+    border-radius:18px;
+    min-width:0;
+    font-size:13px;
+  }
+  .player-row{flex-wrap:wrap;gap:10px;}
+  .play-btn{width:52px;height:52px;font-size:20px;}
+  .speed-control,.volume-control{padding:6px 8px;gap:6px;}
+  .speed-display{min-width:40px;font-size:12px;}
+  .volume-slider{width:60px;}
+  .progress-container{gap:4px;}
+  .progress-bar{height:6px;}
+  .progress-fill::after{width:12px;height:12px;}
+}
+
+@media (max-width:430px){
+  select{width:150px;}
+  .controls-top{flex-direction:column;align-items:stretch;}
+  .reading-mode-btn{width:100%;}
+  #reader{max-height:48vh;}
+  .floating-player{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .player-row{flex-direction:row;}
+  .play-btn{width:48px;height:48px;font-size:18px;}
+  .speed-control,.volume-control{font-size:12px;}
+}
+
+@media (max-width:370px){
+  .header h1{font-size:1.35rem;}
+  select{width:100%;}
+  .controls-top > .select-wrapper,
+  .controls-top > button{width:100%;}
+  .floating-player{padding:12px 12px;}
+  .play-btn{width:44px;height:44px;}
+  .subtitle-layer{font-size:16px;}
+}
+
+/* 优化窄屏滚动体验：在键盘弹出时减少遮挡 */
+@supports (height: 100dvh){
+  body{min-height:100dvh;}
+}
+
+/* iOS 安全区域 */
+@supports(padding: max(0px)){
+  .floating-player{
+    padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  }
+}
+
+/* 防止用户缩放导致布局溢出（可选） */
+html{
+  text-size-adjust:100%;
+  -webkit-text-size-adjust:100%;
+}
