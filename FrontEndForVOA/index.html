@@ -11,16 +11,18 @@
     <div class="header">
       <h1>VOA 新闻影子跟读</h1>
       <div class="controls-top">
-        <div class="select-wrapper">
-          <select id="categorySelect"><option value="">加载分类...</option></select>
-        </div>
-        <div class="select-wrapper">
-          <select id="titleSelect" disabled><option value="">请选择文章标题</option></select>
+        <div class="controls-selects">
+          <div class="select-wrapper">
+            <select id="categorySelect"><option value="">加载分类...</option></select>
+          </div>
+          <div class="select-wrapper">
+            <select id="titleSelect" disabled><option value="">请选择文章标题</option></select>
+          </div>
         </div>
         <button id="modeToggle" class="reading-mode-btn" disabled>字幕模式</button>
       </div>
     </div>
-    <div id="currentFeed" class="current-feed"></div>
+
     <div id="panel" class="content-area">
       <div id="detail"><span class="loading">请选择分类与标题...</span></div>
       <div id="subtitleLayer" class="subtitle-layer hidden">
