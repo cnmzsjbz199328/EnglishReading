@@ -9,6 +9,11 @@
     function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[c])) }
     function create(opts) {
         const { audioEl, text, readerEl, modeBtn, layerEl, curEl, nextEl, onScrollCenter } = opts;
+        // 确保初始状态为全文模式: 隐藏字幕层, 显示阅读器
+        layerEl.classList.add('hidden');
+        readerEl.style.display = '';
+        modeBtn.classList.remove('active');
+        modeBtn.textContent = '字幕模式';
         const segments = segment(text);
         readerEl.innerHTML = '';
         const spans = []; segments.forEach((seg, i) => { const sp = document.createElement('span'); sp.className = 'seg'; sp.dataset.i = i; sp.textContent = seg + ' '; readerEl.appendChild(sp); spans.push(sp); });
@@ -21,6 +26,8 @@
         if (audioEl) { audioEl.addEventListener('timeupdate', () => update(audioEl.currentTime)); loop(); audioEl.addEventListener('ended', () => cancelAnimationFrame(raf)); }
         readerEl.addEventListener('click', e => { const el = e.target; if (!el.classList.contains('seg')) return; const i = +el.dataset.i; if (!timings[i]) return; audioEl.currentTime = timings[i].start + .01; audioEl.play(); });
         function setMode(m) { mode = m; if (mode === 'subtitle') { layerEl.classList.remove('hidden'); readerEl.style.display = 'none'; updSubtitle(current >= 0 ? current : 0); modeBtn.textContent = '全文模式'; modeBtn.classList.add('active'); } else { layerEl.classList.add('hidden'); readerEl.style.display = ''; modeBtn.textContent = '字幕模式'; modeBtn.classList.remove('active'); } }
+        // 强制同步一次 DOM 状态为全文模式
+        setMode('full');
         modeBtn.disabled = false; modeBtn.onclick = () => setMode(mode === 'full' ? 'subtitle' : 'full');
         return { segments, timings, setMode };
     }
