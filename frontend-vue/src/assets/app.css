@@ -7,7 +7,7 @@
 
 /* Form controls */
 label{display:block;font-size:14px;color:#556;margin-bottom:6px;}
-input[type="text"],textarea,input[type="file"]{width:100%;padding:12px 14px;border-radius:14px;border:2px solid rgba(0,0,0,0.06);background:#fff;color:#2c3e50;outline:none;box-shadow:0 1px 2px rgba(0,0,0,.02) inset;}
+input[type="text"],textarea,input[type="file"],select{width:100%;padding:12px 14px;border-radius:14px;border:2px solid rgba(0,0,0,0.06);background:#fff;color:#2c3e50;outline:none;box-shadow:0 1px 2px rgba(0,0,0,.02) inset;}
 textarea{resize:vertical;}
 
 /* Layout helpers */

@@ -20,6 +20,11 @@ function openModal(){ modalOpen.value = true }
 function closeModal(){ modalOpen.value = false }
 function clearForm(){ title.value = ''; text.value = ''; file.value = null; const el = document.getElementById('file'); if(el) el.value = '' }
 
+// dropdown selection for exercises
+const selectedId = ref('')
+function onSelectChange(){ if(selectedId.value) openDetail(selectedId.value) }
+function deleteSelected(){ if(selectedId.value){ deleteItem(selectedId.value); selectedId.value = '' } }
+
 onMounted(() => { loadList() })
 </script>
 
@@ -56,17 +61,15 @@ onMounted(() => { loadList() })
     <div class="card" style="margin-top: 16px;">
       <h2>Your Exercises</h2>
       <div class="status">{{ globalStatus }}</div>
-      <div id="list" class="list">
+      <!-- Dropdown instead of list -->
+      <div>
         <div v-if="!items.length" class="muted">No data yet.</div>
-        <div v-for="it in items" :key="it.id" class="item">
-          <div>
-            <h4>{{ it.title || '(no title)' }}</h4>
-            <div class="muted">{{ it.createdAt }} · id: {{ it.id }}</div>
-          </div>
-          <div class="actions">
-            <button class="btn secondary" @click="openDetail(it.id)">Open</button>
-            <button class="btn danger" @click="deleteItem(it.id)">Delete</button>
-          </div>
+        <div v-else style="display:flex; gap:10px; align-items:center;">
+          <select v-model="selectedId" @change="onSelectChange" aria-label="Select an exercise">
+            <option value="" disabled>Select an exercise...</option>
+            <option v-for="it in items" :key="it.id" :value="it.id">{{ it.title || '(no title)' }}</option>
+          </select>
+          <button class="btn danger" :disabled="!selectedId" @click="deleteSelected">Delete</button>
         </div>
       </div>
     </div>
