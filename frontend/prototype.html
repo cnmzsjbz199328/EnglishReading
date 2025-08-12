@@ -4,63 +4,78 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>English Reading - MVP Prototype</title>
+  <link rel="stylesheet" href="../FrontEndForVOA/styles.css" />
   <style>
-    :root { --bg:#0b1120; --panel:#111827; --muted:#374151; --text:#e5e7eb; --brand:#22c55e; --danger:#ef4444; }
-    html, body { height:100%; }
-    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--text); }
-    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    .header { display:flex; gap:16px; align-items:center; margin-bottom: 16px; }
-    input[type="text"], textarea { width:100%; padding:10px 12px; border-radius: 10px; border:1px solid #1f2937; background:#0f172a; color:var(--text); outline:none; }
-    input[type="file"] { color: var(--text); }
-    label { display:block; font-size: 14px; color:#9ca3af; margin-bottom:6px; }
-    .row { display:grid; grid-template-columns: 1fr; gap: 16px; }
-    @media (min-width: 900px) { .row { grid-template-columns: 1.2fr 1fr; } }
-    .card { background: linear-gradient(180deg, #0b122a 0%, #0b1120 100%); border: 1px solid #1f2937; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .card h2 { margin: 0 0 12px; font-size: 16px; color:#d1d5db; }
-    .btn { appearance:none; border:none; background: var(--brand); color:#062b19; font-weight: 700; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
-    .btn.secondary { background:#1f2937; color:#e5e7eb; border:1px solid #374151; }
-    .btn.danger { background: var(--danger); color: #2b0a0a; }
-    .list { display:flex; flex-direction: column; gap: 10px; }
-    .item { display:flex; align-items:center; justify-content: space-between; gap:10px; padding: 10px; border:1px solid #1f2937; border-radius: 12px; background: #0a0f1d; }
-    .item h4 { margin: 0; font-size: 15px; }
-    .muted { color:#9ca3af; font-size: 12px; }
+    /* Prototype overrides to match FrontEndForVOA theme */
+    .header{display:flex;align-items:center;justify-content:space-between;text-align:initial;}
+    .header-left{display:flex;align-items:center;gap:8px;}
+
+    label { display:block; font-size:14px; color:#556; margin-bottom:6px; }
+    input[type="text"], textarea, input[type="file"] { width:100%; padding:12px 14px; border-radius:14px; border:2px solid rgba(0,0,0,0.06); background:#fff; color:#2c3e50; outline:none; box-shadow:0 1px 2px rgba(0,0,0,.02) inset; }
+    textarea { resize: vertical; }
+    .row { display:grid; grid-template-columns: 1fr; gap:16px; }
+    @media (min-width: 900px) { .row { grid-template-columns: 1fr; } }
+
+    .card { background:#fff; border:1px solid #e3e8ef; border-radius:20px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.06); }
+    .card h2 { margin:0 0 12px; font-size:16px; color:#2c3e50; }
+
+    .btn { appearance:none; border:2px solid rgba(255,255,255,.4); background:rgba(240,241,251,1); color:#2c3e50; font-weight:600; padding:10px 14px; border-radius:14px; cursor:pointer; transition:.25s; }
+    .btn:hover { background:#fff; border-color:#667eea; color:#667eea; }
+    .btn.secondary { background:#fff; border-color:#e3e8ef; color:#374151; }
+    .btn.secondary:hover { border-color:#667eea; color:#667eea; }
+    .btn.danger { background:#fee2e2; border-color:#fecaca; color:#b91c1c; }
+    .btn.danger:hover { background:#fff; border-color:#f87171; color:#dc2626; }
+
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; border:1px solid #e3e8ef; border-radius:14px; background:#fff; }
+    .item h4 { margin:0; font-size:15px; color:#2c3e50; }
+    .muted { color:#667; font-size:12px; }
     .actions { display:flex; gap:8px; }
-    .status { margin-top: 10px; min-height: 20px; color:#93c5fd; }
-    .audio { width: 100%; margin-top: 8px; }
-    .badge { font-size: 12px; color:#93c5fd; }
-    .flex { display:flex; gap:8px; align-items:center; }
-    .debug-panel { margin-top:16px; background:#0a0f1d; border:1px solid #1f2937; border-radius:12px; padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; max-height:240px; overflow:auto; line-height:1.4; }
-    .debug-panel h3 { margin:0 0 6px; font-size:12px; letter-spacing:0.5px; color:#93c5fd; display:flex; justify-content:space-between; align-items:center; }
-    .debug-entry.ok { color:#34d399; }
-    .debug-entry.err { color:#f87171; }
-    .debug-entry.step { color:#93c5fd; }
-    .debug-controls button { background:#1f2937; color:#9ca3af; border:1px solid #374151; border-radius:6px; padding:2px 6px; cursor:pointer; font-size:11px; }
-    .debug-controls button:hover { color:#e5e7eb; }
+
+    .status { margin-top:10px; min-height:20px; color:#667eea; }
+    .audio { width:100%; margin-top:8px; }
+
+    .badge { display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; background:rgba(102,126,234,.12); color:#667eea; border:1px solid rgba(102,126,234,.25); }
+
+    /* Modal styles */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:1000;}
+    .modal{background:#fff;border:1px solid #e3e8ef;border-radius:20px;padding:16px;width:min(720px,92vw);max-height:85vh;overflow:auto;box-shadow:0 20px 40px rgba(0,0,0,.2);}    
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin:0; font-size: 20px;">English Reading - Prototype</h1>
-      <span class="badge">MVP Tester</span>
-    </div>
-
-    <div class="card" style="margin-bottom: 16px;">
-      <div class="flex" style="flex-wrap: wrap; gap: 10px 12px;">
-        <div style="flex:1 1 340px; min-width: 260px;">
-          <label>API Base URL</label>
-          <input id="baseUrl" type="text" value="https://english-reading-app.tj15982183241.workers.dev" placeholder="https://<your-worker>.workers.dev" />
-        </div>
-        <div class="flex">
-          <button class="btn secondary" id="btnRefresh">Refresh List</button>
-        </div>
+      <div class="header-left">
+        <h1>English Reading - Prototype</h1>
+        <span class="badge">MVP Tester</span>
       </div>
-      <div id="globalStatus" class="status"></div>
+      <div class="header-actions">
+        <button class="btn" id="btnOpenModal">New Exercise</button>
+      </div>
     </div>
 
     <div class="row">
       <div class="card">
-        <h2>Create Exercise</h2>
+        <h2>Practice View</h2>
+        <div id="detail">
+          <div class="muted">Select an item from the list to view details and play audio.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h2>Your Exercises</h2>
+      <div id="list" class="list"></div>
+    </div>
+
+    <!-- Modal: Create Exercise -->
+    <div id="exerciseModal" class="modal-backdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+          <h2 id="modalTitle" style="margin:0;">Create Exercise</h2>
+          <button class="btn secondary" id="btnCloseModal" aria-label="Close">Close</button>
+        </div>
         <div>
           <label>Title</label>
           <input id="title" type="text" placeholder="A short title" />
@@ -79,24 +94,6 @@
         </div>
         <div id="createStatus" class="status"></div>
       </div>
-
-      <div class="card">
-        <h2>Practice View</h2>
-        <div id="detail">
-          <div class="muted">Select an item from the list to view details and play audio.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top: 16px;">
-      <h2>Your Exercises</h2>
-      <div id="list" class="list"></div>
-    </div>
-
-    <!-- Debug Panel -->
-    <div class="debug-panel" id="debugPanel">
-      <h3>Debug Log <span class="debug-controls"><button id="btnClearLog" title="Clear">Clear</button><button id="btnToggleLog" title="Collapse">Hide</button></span></h3>
-      <div id="debugBody"></div>
     </div>
   </div>
 
@@ -108,30 +105,43 @@
     function addLog(msg, type='step', extra) {
       if(!DEBUG) return; 
       console.log('[MVP]', type.toUpperCase(), msg, extra||'');
+      const bodyEl = debugBody();
+      if (!bodyEl) return; // no debug panel in DOM
       const line = document.createElement('div');
       line.className = `debug-entry ${type}`;
       line.textContent = `[${ts()}] ${msg}`;
-      debugBody().appendChild(line);
-      // Auto scroll
-      debugBody().parentElement.scrollTop = debugBody().parentElement.scrollHeight;
+      bodyEl.appendChild(line);
+      if (bodyEl.parentElement) {
+        bodyEl.parentElement.scrollTop = bodyEl.parentElement.scrollHeight;
+      }
     }
     function logStep(m,e){addLog(m,'step',e);} 
     function logOk(m,e){addLog(m,'ok',e);} 
     function logErr(m,e){addLog(m,'err',e);} 
 
-    document.addEventListener('click', (ev)=>{
-      if(ev.target.id==='btnClearLog'){ debugBody().innerHTML=''; addLog('Log cleared','step'); }
-      if(ev.target.id==='btnToggleLog'){ const panel = document.getElementById('debugPanel'); const bodyDiv = debugBody(); if(panel.dataset.min==='1'){ panel.dataset.min='0'; bodyDiv.style.display='block'; ev.target.textContent='Hide'; addLog('Debug expanded','step'); } else { panel.dataset.min='1'; bodyDiv.style.display='none'; ev.target.textContent='Show'; addLog('Debug collapsed','step'); } }
-    });
+    // Modal controls
+    const modal = document.getElementById('exerciseModal');
+    const openModal = () => { if(modal){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); } };
+    const closeModal = () => { if(modal){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); } };
+    document.getElementById('btnOpenModal')?.addEventListener('click', openModal);
+    document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
 
     // ===== Existing Code with Logs Injected =====
     const $ = (id) => document.getElementById(id);
-    const state = { base: $("baseUrl").value };
-    $("baseUrl").addEventListener('change', () => { state.base = $("baseUrl").value.trim(); logStep('Base URL changed: '+state.base); });
+    const DEFAULT_BASE_URL = 'https://english-reading-app.tj15982183241.workers.dev';
+    const state = { base: DEFAULT_BASE_URL };
+    const baseInput = $("baseUrl");
+    if (baseInput) {
+      state.base = baseInput.value.trim();
+      baseInput.addEventListener('change', () => { state.base = $("baseUrl").value.trim(); logStep('Base URL changed: '+state.base); });
+    }
 
     const setStatus = (el, msg, isError=false) => {
+      if (!el) { logStep(`Status(no-el): ${msg}`); return; }
       el.textContent = msg || '';
-      el.style.color = isError ? '#fecaca' : '#93c5fd';
+      el.style.color = isError ? '#c62828' : '#667eea';
       if(isError) logErr(`Status(${el.id}): ${msg}`); else logStep(`Status(${el.id}): ${msg}`);
     };
 
@@ -203,10 +213,10 @@
         const d = data.data || {};
         logOk('Detail loaded id='+id);
         el.innerHTML = `
-          <div style="display:flex; flex-direction: column; gap: 8px;">
+          <div style=\"display:flex; flex-direction: column; gap: 8px;\">
             <div><strong>Title:</strong> ${escapeHtml(d.title || '')}</div>
-            <div><strong>Text:</strong><br/><div style="white-space: pre-wrap;">${escapeHtml(d.text || d.originalText || '')}</div></div>
-            <audio class="audio" id="audio" controls preload="none"></audio>
+            <div><strong>Text:</strong><br/><div style=\"white-space: pre-wrap;\">${escapeHtml(d.text || d.originalText || '')}</div></div>
+            <audio class=\"audio\" id=\"audio\" controls preload=\"none\"></audio>
           </div>
         `;
         const audio = document.getElementById('audio');
@@ -215,7 +225,7 @@
         audio.load();
       } catch (e) {
         logErr('Open detail failed id='+id, e);
-        el.innerHTML = `<div class="muted">Failed to load: ${escapeHtml(e.message)}</div>`;
+        el.innerHTML = `<div class=\"muted\">Failed to load: ${escapeHtml(e.message)}</div>`;
       }
     }
 
@@ -269,7 +279,7 @@
       return key;
     }
 
-    $("btnSubmit").addEventListener('click', async () => {
+    $("btnSubmit")?.addEventListener('click', async () => {
       logStep('Submit clicked');
       const title = $("title").value.trim();
       const text = $("text").value.trim();
@@ -299,14 +309,14 @@
         $("text").value = '';
         $("file").value = '';
         await loadList();
-        if (created?.data?.id) openDetail(created.data.id);
+        if (created?.data?.id) { openDetail(created.data.id); closeModal(); }
       } catch (e) {
         logErr('Submit failed', e);
         setStatus($("createStatus"), e.message, true);
       }
     });
 
-    $("btnClear").addEventListener('click', () => {
+    $("btnClear")?.addEventListener('click', () => {
       logStep('Clear form');
       $("title").value = '';
       $("text").value = '';
@@ -314,7 +324,7 @@
       setStatus($("createStatus"), '');
     });
 
-    $("btnRefresh").addEventListener('click', () => { logStep('Manual refresh'); loadList(); });
+    $("btnRefresh")?.addEventListener('click', () => { logStep('Manual refresh'); loadList(); });
 
     function escapeHtml(str) {
       return String(str || '')
