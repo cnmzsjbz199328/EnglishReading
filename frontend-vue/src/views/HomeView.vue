@@ -1,13 +1,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRecordings } from '../composables/useRecordings'
+import FloatingPlayer from '../components/FloatingPlayer.vue'
 
 const {
-  items, detail, audioSrc,
+  items,
+  detail,
+  audioSrc,
   modalOpen,
-  globalStatus, createStatus, createError,
-  loadingList, loadingSubmit,
-  loadList, openDetail, deleteItem, submit,
+  globalStatus,
+  createStatus,
+  createError,
+  loadingList,
+  loadingSubmit,
+  loadList,
+  openDetail,
+  deleteItem,
+  submit,
 } = useRecordings()
 
 // form refs
@@ -15,94 +24,341 @@ const title = ref('')
 const text = ref('')
 const file = ref(null)
 
-function onFileChange(e){ file.value = e.target.files?.[0] || null }
-function openModal(){ modalOpen.value = true }
-function closeModal(){ modalOpen.value = false }
-function clearForm(){ title.value = ''; text.value = ''; file.value = null; const el = document.getElementById('file'); if(el) el.value = '' }
+// 浮动播放器引用
+const floatingPlayer = ref(null)
+
+function onFileChange(e) {
+  file.value = e.target.files?.[0] || null
+}
+function openModal() {
+  modalOpen.value = true
+}
+function closeModal() {
+  modalOpen.value = false
+}
+function clearForm() {
+  title.value = ''
+  text.value = ''
+  file.value = null
+  const el = document.getElementById('file')
+  if (el) el.value = ''
+}
 
 // dropdown selection for exercises
 const selectedId = ref('')
-function onSelectChange(){ if(selectedId.value) openDetail(selectedId.value) }
-function deleteSelected(){ if(selectedId.value){ deleteItem(selectedId.value); selectedId.value = '' } }
+function onSelectChange() {
+  if (selectedId.value) openDetail(selectedId.value)
+}
+function deleteSelected() {
+  if (selectedId.value) {
+    deleteItem(selectedId.value)
+    selectedId.value = ''
+  }
+}
 
-onMounted(() => { loadList() })
+onMounted(() => {
+  loadList()
+})
 </script>
 
 <template>
   <div class="container">
+    <!-- 现代化头部 -->
     <div class="header">
       <div class="header-left">
-        <h1>English Reading - Prototype</h1>
-        <span class="badge">MVP Tester</span>
+        <h1>English Reading</h1>
       </div>
       <div class="header-actions">
-        <button class="btn" @click="openModal">New Exercise</button>
+        <button class="btn" @click="openModal">
+          <span>📝</span> New Exercise
+        </button>
       </div>
     </div>
 
-    <div class="row">
-      <div class="card">
-        <h2>Practice View</h2>
-        <div id="detail">
-          <template v-if="detail">
-            <div style="display:flex; flex-direction: column; gap: 8px;">
-              <div><strong>Title:</strong> {{ detail.title }}</div>
-              <div><strong>Text:</strong><br/><div style="white-space: pre-wrap;">{{ detail.text || detail.originalText }}</div></div>
-              <audio class="audio" controls preload="none" :src="audioSrc"></audio>
+    <!-- 主要内容区域 -->
+    <div class="content-area">
+      <!-- 练习选择区域 -->
+      <div style="margin-bottom: 32px;">
+        <div class="status" style="margin-bottom: 16px;">{{ globalStatus }}</div>
+        
+        <div v-if="!items.length" class="muted" style="text-align: center; padding: 40px 0;">
+          <div class="empty-state-icon" style="font-size: 48px; margin-bottom: 16px;">📚</div>
+          <div style="font-size: 16px;">No exercises yet. Create your first one!</div>
+        </div>
+        
+        <div v-else class="exercise-selection" style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <select v-model="selectedId" @change="onSelectChange" aria-label="Select an exercise" style="width: 100%;">
+              <option value="" disabled>🎯 Select an exercise to practice...</option>
+              <option v-for="it in items" :key="it.id" :value="it.id">
+                {{ it.title || '(Untitled Exercise)' }}
+              </option>
+            </select>
+          </div>
+          <button 
+            class="btn danger" 
+            :disabled="!selectedId" 
+            @click="deleteSelected"
+            style="flex-shrink: 0; white-space: nowrap;"
+          >
+            <span style="display: inline-block; margin-right: 4px;">🗑️</span>
+            <span class="btn-text">Delete</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 练习详情显示 -->
+      <div id="detail" style="background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e3e8ef;">
+        <template v-if="detail">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <h4 style="color: #374151; margin-bottom: 12px; font-weight: 600;">📚 Reading Content:</h4>
+              <div class="reading-content" style="
+                white-space: pre-wrap; 
+                line-height: 1.7; 
+                background: #f8f9fa; 
+                padding: 20px; 
+                border-radius: 12px; 
+                border-left: 4px solid #667eea;
+                color: #2c3e50;
+                font-size: 15px;
+              ">{{ detail.text || detail.originalText }}</div>
             </div>
-          </template>
-          <template v-else>
-            <div class="muted">Select an item from the list to view details and play audio.</div>
-          </template>
-        </div>
+            
+            <div>
+              <h4 style="color: #374151; margin-bottom: 12px; font-weight: 600;">🎵 Audio Practice:</h4>
+              <div style="
+                padding: 20px; 
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                border-radius: 12px; 
+                border-left: 4px solid #0ea5e9;
+                color: #0c4a6e;
+                font-size: 15px;
+                text-align: center;
+              ">
+                <div style="font-size: 48px; margin-bottom: 12px;">🎧</div>
+                <div style="font-weight: 600; margin-bottom: 8px;">现代化音频播放器已准备就绪</div>
+                <div style="font-size: 14px; opacity: 0.8;">
+                  页面底部的浮动播放器提供了专业的音频控制功能，包括速度调节、音量控制和进度跳转。
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <template v-else>
+          <div style="text-align: center; padding: 60px 20px; color: #6b7280;">
+            <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.5;">🎯</div>
+            <div style="font-size: 18px; margin-bottom: 8px;">Ready to Practice?</div>
+            <div style="font-size: 14px;">Select an exercise from the dropdown above to begin your reading practice.</div>
+          </div>
+        </template>
       </div>
     </div>
 
-    <div class="card" style="margin-top: 16px;">
-      <h2>Your Exercises</h2>
-      <div class="status">{{ globalStatus }}</div>
-      <!-- Dropdown instead of list -->
-      <div>
-        <div v-if="!items.length" class="muted">No data yet.</div>
-        <div v-else style="display:flex; gap:10px; align-items:center;">
-          <select v-model="selectedId" @change="onSelectChange" aria-label="Select an exercise">
-            <option value="" disabled>Select an exercise...</option>
-            <option v-for="it in items" :key="it.id" :value="it.id">{{ it.title || '(no title)' }}</option>
-          </select>
-          <button class="btn danger" :disabled="!selectedId" @click="deleteSelected">Delete</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Create Exercise -->
-    <div id="exerciseModal" class="modal-backdrop" :style="{display: modalOpen ? 'flex': 'none'}" aria-hidden="true" @click.self="closeModal">
+    <!-- 现代化模态框 -->
+    <div
+      id="exerciseModal"
+      class="modal-backdrop"
+      :style="{ display: modalOpen ? 'flex' : 'none' }"
+      aria-hidden="true"
+      @click.self="closeModal"
+    >
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
-          <h2 id="modalTitle" style="margin:0;">Create Exercise</h2>
-          <button class="btn secondary" @click="closeModal" aria-label="Close">Close</button>
+          <h2 id="modalTitle">✨ Create New Exercise</h2>
+          <button class="btn secondary" @click="closeModal" aria-label="Close">✕</button>
         </div>
-        <div>
-          <label>Title</label>
-          <input id="title" type="text" placeholder="A short title" v-model.trim="title" />
+        
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <label>📝 Exercise Title</label>
+            <input 
+              id="title" 
+              type="text" 
+              placeholder="Give your exercise a memorable title..." 
+              v-model.trim="title" 
+            />
+          </div>
+          
+          <div>
+            <label>📚 Reading Text</label>
+            <textarea
+              id="text"
+              rows="8"
+              placeholder="Paste your reading material here. This could be an article, story, or any text you'd like to practice reading..."
+              v-model.trim="text"
+            ></textarea>
+          </div>
+          
+          <div>
+            <label>🎵 Audio File (MP3/WAV)</label>
+            <input 
+              id="file" 
+              type="file" 
+              accept="audio/*" 
+              @change="onFileChange"
+              style="padding: 16px; border: 2px dashed #d1d5db; background: #f9fafb;"
+            />
+            <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+              Upload an audio file that corresponds to your reading text for pronunciation practice.
+            </div>
+          </div>
+          
+          <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button
+              class="btn"
+              :disabled="loadingSubmit"
+              @click="submit({ title, text, file: file })"
+              style="flex: 1; min-width: 150px;"
+            >
+              {{ loadingSubmit ? '⏳ Uploading...' : '🚀 Create Exercise' }}
+            </button>
+            <button class="btn secondary" :disabled="loadingSubmit" @click="clearForm">
+              🔄 Clear Form
+            </button>
+          </div>
+          
+          <div
+            id="createStatus"
+            class="status"
+            :style="{ 
+              color: createError ? '#dc2626' : '#667eea',
+              fontSize: '14px',
+              textAlign: 'center',
+              minHeight: '20px'
+            }"
+          >
+            {{ createStatus }}
+          </div>
         </div>
-        <div>
-          <label>Text</label>
-          <textarea id="text" rows="6" placeholder="Paste your reading text here..." v-model.trim="text"></textarea>
-        </div>
-        <div>
-          <label>Audio File (mp3/wav)</label>
-          <input id="file" type="file" accept="audio/*" @change="onFileChange" />
-        </div>
-        <div style="margin-top: 10px; display:flex; gap:10px;">
-          <button class="btn" :disabled="loadingSubmit" @click="submit({ title, text, file: file })">{{ loadingSubmit ? 'Uploading...' : 'Upload & Save' }}</button>
-          <button class="btn secondary" :disabled="loadingSubmit" @click="clearForm">Clear</button>
-        </div>
-        <div id="createStatus" class="status" :style="{ color: createError ? '#c62828' : '#667eea' }">{{ createStatus }}</div>
       </div>
     </div>
   </div>
+
+  <!-- 浮动播放器 -->
+  <FloatingPlayer 
+    ref="floatingPlayer"
+    :audio-src="audioSrc" 
+    :visible="!!detail && !!audioSrc"
+  />
 </template>
 
 <style scoped>
-/***** page-level adjustments if needed *****/
+/* 组件级响应式优化 */
+@media (max-width: 640px) {
+  .btn-text {
+    display: none;
+  }
+  
+  .header-actions .btn {
+    padding: 10px 12px;
+  }
+  
+  .header-actions .btn span:first-child {
+    margin-right: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    gap: 12px;
+  }
+  
+  .header-left {
+    gap: 8px;
+  }
+  
+  .header h1 {
+    font-size: 1.4rem !important;
+  }
+  
+  /* 练习选择区域在小屏幕上的优化 */
+  .exercise-selection {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px;
+  }
+  
+  .exercise-selection > div:first-child {
+    min-width: unset;
+  }
+  
+  .exercise-selection .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .header h1 {
+    font-size: 1.2rem !important;
+    line-height: 1.3;
+  }
+  
+  .badge {
+    font-size: 10px !important;
+    padding: 3px 6px !important;
+  }
+  
+  /* 模态框按钮在超小屏幕的优化 */
+  .modal .btn {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
+
+/* 音频元素的额外样式 */
+.audio {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.audio:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 详情区域的优化 */
+#detail {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+#detail h3 {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* 文本内容区域的优化 */
+.reading-content {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+}
+
+@media (max-width: 640px) {
+  .reading-content {
+    max-height: 250px;
+    font-size: 14px;
+  }
+}
+
+/* 空状态图标的动画 */
+.empty-state-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state-icon {
+    animation: none;
+  }
+}
 </style>

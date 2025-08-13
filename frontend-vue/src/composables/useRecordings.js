@@ -13,85 +13,99 @@ export function useRecordings() {
   const loadingList = ref(false)
   const loadingSubmit = ref(false)
 
-  const audioSrc = computed(() => detail.value?.id ? `${base}/api/recordings/${detail.value.id}/audio` : '')
+  const audioSrc = computed(() =>
+    detail.value?.id ? `${base}/api/recordings/${detail.value.id}/audio` : '',
+  )
 
-  function setGlobalStatus(msg, isError=false){
+  function setGlobalStatus(msg, isError = false) {
     globalStatus.value = msg || ''
     createError.value = !!isError
   }
-  function setCreateStatus(msg, isError=false){
+  function setCreateStatus(msg, isError = false) {
     createStatus.value = msg || ''
     createError.value = !!isError
   }
 
-  async function loadList(){
+  async function loadList() {
     loadingList.value = true
     setGlobalStatus('Loading list...')
-    try{
+    try {
       const data = await fetchJSON('/api/recordings')
       items.value = data.data || []
       setGlobalStatus(`Loaded ${items.value.length} item(s).`)
-    }catch(e){
+    } catch (e) {
       setGlobalStatus(e.message, true)
-    }finally{
+    } finally {
       loadingList.value = false
     }
   }
 
-  async function openDetail(id){
+  async function openDetail(id) {
     detail.value = null
-    try{
+    try {
       const data = await fetchJSON(`/api/recordings/${id}`)
       const d = data.data || {}
       detail.value = { id, ...d }
-    }catch(e){
+    } catch (e) {
       setGlobalStatus('Failed to load: ' + e.message, true)
     }
   }
 
-  async function deleteItem(id){
-    if(!confirm('Delete this exercise?')) return
-    try{
-      await fetchJSON(`/api/recordings/${id}`, { method:'DELETE' })
+  async function deleteItem(id) {
+    if (!confirm('Delete this exercise?')) return
+    try {
+      await fetchJSON(`/api/recordings/${id}`, { method: 'DELETE' })
       await loadList()
-      if(detail.value?.id === id) detail.value = null
-    }catch(e){
+      if (detail.value?.id === id) detail.value = null
+    } catch (e) {
       alert('Delete failed: ' + e.message)
     }
   }
 
-  async function submit({ title, text, file }){
-    if(loadingSubmit.value) return
-    if(!title || !text || !file){
+  async function submit({ title, text, file }) {
+    if (loadingSubmit.value) return
+    if (!title || !text || !file) {
       setCreateStatus('Please fill all fields and select an audio file.', true)
       return
     }
-    try{
+    try {
       loadingSubmit.value = true
       setCreateStatus('Uploading audio...')
       const key = await uploadFile(file)
       setCreateStatus('Saving record...')
       const payload = { title, text, audioKey: key }
-      const created = await fetchJSON('/api/recordings', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+      const created = await fetchJSON('/api/recordings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
       setCreateStatus('Saved!')
       await loadList()
-      if(created?.data?.id){
+      if (created?.data?.id) {
         await openDetail(created.data.id)
         modalOpen.value = false
       }
-    }catch(e){
+    } catch (e) {
       setCreateStatus(e.message, true)
-    }finally{
+    } finally {
       loadingSubmit.value = false
     }
   }
 
   return {
     base,
-    items, detail, audioSrc,
+    items,
+    detail,
+    audioSrc,
     modalOpen,
-    globalStatus, createStatus, createError,
-    loadingList, loadingSubmit,
-    loadList, openDetail, deleteItem, submit,
+    globalStatus,
+    createStatus,
+    createError,
+    loadingList,
+    loadingSubmit,
+    loadList,
+    openDetail,
+    deleteItem,
+    submit,
   }
 }
