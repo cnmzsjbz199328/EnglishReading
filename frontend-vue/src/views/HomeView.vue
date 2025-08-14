@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRecordings } from '../composables/useRecordings'
 import FloatingPlayer from '../components/FloatingPlayer.vue'
+import TTSAudioGenerator from '../components/TTSAudioGenerator.vue'
 
 const {
   items,
@@ -23,6 +24,8 @@ const {
 const title = ref('')
 const text = ref('')
 const file = ref(null)
+const showTTSGenerator = ref(false)
+const audioSource = ref('file') // 'file' 或 'tts'
 
 // 浮动播放器引用
 const floatingPlayer = ref(null)
@@ -40,8 +43,32 @@ function clearForm() {
   title.value = ''
   text.value = ''
   file.value = null
+  audioSource.value = 'file'
+  showTTSGenerator.value = false
   const el = document.getElementById('file')
   if (el) el.value = ''
+}
+
+// TTS相关函数
+function switchToTTS() {
+  audioSource.value = 'tts'
+  showTTSGenerator.value = true
+  file.value = null
+  const el = document.getElementById('file')
+  if (el) el.value = ''
+}
+
+function switchToFileUpload() {
+  audioSource.value = 'file'
+  showTTSGenerator.value = false
+  file.value = null
+}
+
+function onTTSAudioGenerated(audioData) {
+  // 将TTS生成的音频设置为文件
+  file.value = audioData.file
+  showTTSGenerator.value = false
+  // 可以添加一些用户反馈
 }
 
 // dropdown selection for exercises
@@ -192,16 +219,80 @@ onMounted(() => {
           </div>
           
           <div>
-            <label>🎵 Audio File (MP3/WAV)</label>
-            <input 
-              id="file" 
-              type="file" 
-              accept="audio/*" 
-              @change="onFileChange"
-              style="padding: 16px; border: 2px dashed #d1d5db; background: #f9fafb;"
-            />
-            <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
-              Upload an audio file that corresponds to your reading text for pronunciation practice.
+            <label>🎵 Audio Source</label>
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                  <input 
+                    type="radio" 
+                    :value="'file'" 
+                    v-model="audioSource"
+                    @change="switchToFileUpload"
+                    style="margin: 0;"
+                  />
+                  <span>📁 Upload Audio File</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                  <input 
+                    type="radio" 
+                    :value="'tts'" 
+                    v-model="audioSource"
+                    @change="switchToTTS"
+                    style="margin: 0;"
+                  />
+                  <span>🎤 Generate with Text-to-Speech</span>
+                </label>
+              </div>
+            </div>
+            
+            <!-- 文件上传选项 -->
+            <div v-if="audioSource === 'file'">
+              <input 
+                id="file" 
+                type="file" 
+                accept="audio/*" 
+                @change="onFileChange"
+                style="padding: 16px; border: 2px dashed #d1d5db; background: #f9fafb; width: 100%;"
+              />
+              <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+                Upload an audio file (MP3/WAV) that corresponds to your reading text for pronunciation practice.
+              </div>
+            </div>
+            
+            <!-- TTS生成选项 -->
+            <div v-else-if="audioSource === 'tts'">
+              <div v-if="!showTTSGenerator" style="
+                padding: 20px; 
+                background: linear-gradient(135deg, #fef3e2 0%, #fef9e7 100%); 
+                border: 2px dashed #f59e0b; 
+                border-radius: 12px;
+                text-align: center;
+                cursor: pointer;
+              " @click="showTTSGenerator = true">
+                <div style="font-size: 48px; margin-bottom: 12px;">🎤</div>
+                <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">Generate Audio with AI</div>
+                <div style="font-size: 14px; color: #a16207;">
+                  Click here to use Text-to-Speech technology to automatically generate audio from your reading text.
+                </div>
+              </div>
+              
+              <div v-if="file && audioSource === 'tts'" style="
+                padding: 16px; 
+                background: #f0f9ff; 
+                border: 2px solid #0ea5e9; 
+                border-radius: 8px;
+                margin-top: 12px;
+              ">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 24px;">✅</span>
+                  <div>
+                    <div style="font-weight: 600; color: #0c4a6e;">TTS Audio Generated Successfully</div>
+                    <div style="font-size: 14px; color: #0369a1;">
+                      Audio has been generated and is ready to use with your exercise.
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -231,6 +322,14 @@ onMounted(() => {
           >
             {{ createStatus }}
           </div>
+        </div>
+        
+        <!-- TTS Audio Generator -->
+        <div v-if="showTTSGenerator && audioSource === 'tts'" style="margin-top: 20px;">
+          <TTSAudioGenerator 
+            @audioGenerated="onTTSAudioGenerated"
+            @close="showTTSGenerator = false"
+          />
         </div>
       </div>
     </div>
