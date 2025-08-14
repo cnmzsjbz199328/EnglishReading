@@ -4,6 +4,8 @@ import { Hono } from 'hono'
 import type { Recording } from '../types'
 import { DatabaseService } from '../lib/database'
 import { StorageService } from '../lib/storage'
+import { TTSService } from '../lib/tts-service'
+import { validateRecordingRequest } from '../lib/validators'
 
 // Define the environment bindings type
 type Bindings = {

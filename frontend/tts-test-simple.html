@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>TTS API 测试 - 新版本</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background: #f9f9f9; }
+    button { font-size: 1em; padding: 0.5em; margin: 0.5em; }
+    textarea { width: 100%; height: 100px; margin: 0.5em 0; }
+    #log { background: #eee; padding: 1em; white-space: pre-wrap; font-family: monospace; height: 300px; overflow-y: auto; margin-top: 1em; }
+    .controls { margin: 1em 0; }
+    audio { width: 100%; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>🗣️ TTS API 测试 (新版本)</h1>
+  
+  <div class="controls">
+    <label>测试文本:</label>
+    <textarea id="textInput">Hello, this is a test of our new TTS API integration.</textarea>
+  </div>
+  
+  <div class="controls">
+    <label>语言:</label>
+    <select id="langSelect">
+      <option value="en-US">English (US)</option>
+      <option value="cmn-CN">中文 (普通话)</option>
+      <option value="zh-TW">中文 (台湾)</option>
+    </select>
+  </div>
+  
+  <div class="controls">
+    <button onclick="testVoicesList()">📜 获取声音列表</button>
+    <button onclick="testTTSSynthesis()">🔊 语音合成测试</button>
+    <button onclick="clearLog()">🗑️ 清除日志</button>
+  </div>
+  
+  <audio id="audioPlayer" controls style="width: 100%; margin: 1em 0;"></audio>
+  
+  <h3>📋 测试日志:</h3>
+  <div id="log"></div>
+
+  <script>
+    const log = (msg) => {
+      const logBox = document.getElementById("log");
+      const timestamp = new Date().toLocaleTimeString();
+      logBox.textContent += `[${timestamp}] ${msg}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+    };
+
+    const clearLog = () => {
+      document.getElementById("log").textContent = '';
+    };
+
+    // 测试获取声音列表
+    async function testVoicesList() {
+      try {
+        const language = document.getElementById('langSelect').value;
+        const url = `https://english-reading-app.tj15982183241.workers.dev/api/tts/voices?language=${encodeURIComponent(language)}`;
+        
+        log(`📡 请求声音列表: ${url}`);
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        log(`📊 响应状态: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          log(`❌ 请求失败: ${errorText}`);
+          return;
+        }
+        
+        const data = await response.json();
+        log(`✅ 成功获取声音列表:`);
+        log(JSON.stringify(data, null, 2));
+        
+      } catch (error) {
+        log(`💥 请求异常: ${error.message}`);
+      }
+    }
+
+    // 测试TTS合成
+    async function testTTSSynthesis() {
+      try {
+        const text = document.getElementById('textInput').value.trim();
+        const language = document.getElementById('langSelect').value;
+        
+        if (!text) {
+          log('⚠️ 请输入测试文本');
+          return;
+        }
+        
+        const url = 'https://english-reading-app.tj15982183241.workers.dev/api/tts/preview';
+        const requestBody = {
+          text: text,
+          language: language,
+          voice: 'auto',
+          encoding: 'MP3',
+          rate: 1.0,
+          pitch: 0.0,
+          useSSML: false
+        };
+        
+        log(`📡 请求TTS合成: ${url}`);
+        log(`📦 请求数据: ${JSON.stringify(requestBody, null, 2)}`);
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        log(`📊 响应状态: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          log(`❌ 请求失败: ${errorText}`);
+          return;
+        }
+        
+        // 处理音频响应
+        const audioBuffer = await response.arrayBuffer();
+        const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+        
+        log(`✅ 收到音频数据，大小: ${audioBlob.size} 字节`);
+        
+        // 播放音频
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.src = audioUrl;
+        
+        log('🎵 音频已加载到播放器，点击播放按钮收听');
+        
+      } catch (error) {
+        log(`💥 请求异常: ${error.message}`);
+      }
+    }
+
+    // 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      log('🚀 TTS API 测试页面已加载');
+      log('💡 提示: 请确保开发服务器运行在 http://127.0.0.1:8787');
+    });
+  </script>
+</body>
+</html>

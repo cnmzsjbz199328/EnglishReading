@@ -4,6 +4,8 @@ import type { Hono } from 'hono'
 type Env = {
   DB: D1Database;
   R2_BUCKET: R2Bucket;
+  GOOGLE_PRIVATE_KEY: string;
+  GOOGLE_CLIENT_EMAIL: string;
 }
 
 // ===== VOA Feed Whitelist =====

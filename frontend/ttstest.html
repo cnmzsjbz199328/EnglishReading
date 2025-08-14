@@ -14,7 +14,7 @@
   <h1>🗣️ Cloudflare Worker 语音合成测试（带参数）</h1>
 
   <label>Worker 地址</label>
-  <input type="text" id="workerBase" value="https://test.tj15982183241.workers.dev/" />
+  <input type="text" id="workerBase" value="https://english-reading-app.tj15982183241.workers.dev/api/tts" />
 
   <label>输入文本（或勾选 SSML 并粘贴 SSML）</label>
   <textarea id="textInput" rows="4">你好，欢迎来到语音合成演示！</textarea>
@@ -102,25 +102,27 @@
     els.pitch.addEventListener('input', () => els.pitchVal.textContent = Number(els.pitch.value).toFixed(1));
 
     function buildURL(withListOnly = false) {
-      const base = els.workerBase.value.trim().replace(/\/$/, '/')
-      const p = new URL(base);
+      const base = els.workerBase.value.trim().replace(/\/$/, '')
       if (withListOnly) {
-        p.searchParams.set('list', '1');
-      } else {
-        const text = els.text.value.trim();
-        if (!text) throw new Error('请输入文本');
-        p.searchParams.set('text', text);
-        if (els.ssml.checked) p.searchParams.set('ssml', '1');
+        return `${base}/voices?language=${encodeURIComponent(els.lang.value)}`;
       }
-      p.searchParams.set('lang', els.lang.value);
-      const voice = els.voice.value || '';
-      if (voice) p.searchParams.set('voice', voice);
-      p.searchParams.set('encoding', els.enc.value);
-      const sr = els.sr.value.trim();
-      if (sr) p.searchParams.set('sr', sr);
-      p.searchParams.set('rate', els.rate.value);
-      p.searchParams.set('pitch', els.pitch.value);
-      return p.toString();
+      return `${base}/preview`;
+    }
+
+    function buildRequestBody() {
+      const text = els.text.value.trim();
+      if (!text) throw new Error('请输入文本');
+      
+      return {
+        text: text,
+        language: els.lang.value,
+        voice: els.voice.value || 'auto',
+        encoding: els.enc.value,
+        rate: parseFloat(els.rate.value),
+        pitch: parseFloat(els.pitch.value),
+        useSSML: els.ssml.checked,
+        ...(els.sr.value.trim() ? { sampleRateHertz: parseInt(els.sr.value) } : {})
+      };
     }
 
     async function listVoices() {
@@ -163,13 +165,25 @@
     async function synthesize() {
       try {
         const url = buildURL(false);
+        const requestBody = buildRequestBody();
         log(`📡 请求语音合成: ${url}`);
+        log(`📦 请求数据: ${JSON.stringify(requestBody, null, 2)}`);
         els.playBtn.disabled = true;
-        const res = await fetch(url);
+        
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
         if (!res.ok) {
-          log(`❌ 请求失败: ${res.status} ${res.statusText}`);
+          const errorText = await res.text();
+          log(`❌ 请求失败: ${res.status} ${res.statusText} - ${errorText}`);
           return;
         }
+        
         // 为了确保 Audio 的 MIME 正确，自己重建 Blob
         const buf = await res.arrayBuffer();
         const mimeMap = { MP3: 'audio/mpeg', OGG_OPUS: 'audio/ogg', LINEAR16: 'audio/wav' };

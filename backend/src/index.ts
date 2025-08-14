@@ -1,10 +1,13 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { tts } from './handlers/tts'
 
 // Cloudflare Workers 环境变量类型
 type Env = {
   DB: D1Database;
   R2_BUCKET: R2Bucket;
+  GOOGLE_PRIVATE_KEY: string;
+  GOOGLE_CLIENT_EMAIL: string;
 }
 
 const app = new Hono<{ Bindings: Env }>()
@@ -22,6 +25,19 @@ app.get('/api/health', (c) => {
   return c.json({ 
     success: true, 
     data: { status: 'ok', timestamp: new Date().toISOString() } 
+  })
+})
+
+// Debug端点 - 检查环境变量（仅开发环境）
+app.get('/api/debug/env', (c) => {
+  return c.json({ 
+    success: true, 
+    data: { 
+      hasGooglePrivateKey: !!c.env.GOOGLE_PRIVATE_KEY,
+      hasGoogleClientEmail: !!c.env.GOOGLE_CLIENT_EMAIL,
+      privateKeyLength: c.env.GOOGLE_PRIVATE_KEY?.length || 0,
+      clientEmail: c.env.GOOGLE_CLIENT_EMAIL || 'undefined'
+    } 
   })
 })
 
@@ -487,8 +503,11 @@ app.get('/api/info', (c) => {
 // ===== VOA Feed Whitelist 等 VOA 路由已抽离到 handlers/voa.ts =====
 import { registerVoaRoutes } from './handlers/voa'
 
-// 在文件末尾 (export default app 之前) 注册 VOA 路由
+// 在文件末尾 (export default app 之前) 注册路由
 registerVoaRoutes(app)
+
+// 注册TTS路由
+app.route('/api/tts', tts)
 
 // 简易 HTML 实体解码
 function decodeHtml(str: string): string {
