@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>语音合成测试</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background: #f9f9f9; }
+    input, button { font-size: 1em; padding: 0.5em; margin: 0.5em 0; width: 100%; }
+    audio { width: 100%; margin-top: 1em; }
+    #log { background: #eee; padding: 1em; white-space: pre-wrap; font-family: monospace; height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>🗣️ Cloudflare Worker 语音合成测试（带参数）</h1>
+
+  <label>Worker 地址</label>
+  <input type="text" id="workerBase" value="https://test.tj15982183241.workers.dev/" />
+
+  <label>输入文本（或勾选 SSML 并粘贴 SSML）</label>
+  <textarea id="textInput" rows="4">你好，欢迎来到语音合成演示！</textarea>
+  <label style="display:flex;gap:.5em;align-items:center;margin:.25em 0 1em 0;">
+    <input type="checkbox" id="ssmlChk" /> 使用 SSML
+  </label>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px;">
+    <div>
+      <label>语言(lang)</label>
+      <select id="langSel">
+        <option value="cmn-CN">cmn-CN（普通话）</option>
+        <option value="yue-HK">yue-HK（粤语）</option>
+        <option value="zh-TW">zh-TW（繁体中文）</option>
+        <option value="en-US">en-US（英语）</option>
+      </select>
+    </div>
+    <div>
+      <label>声音(voice)</label>
+      <div style="display:flex; gap:8px;">
+        <select id="voiceSel" style="flex:1; min-width:180px;"></select>
+        <button id="reloadVoicesBtn" title="重新拉取可用声音">🔄</button>
+      </div>
+      <small>提示：优先选择 Wavenet/Neural2/Studio 等更自然的声音</small>
+    </div>
+    <div>
+      <label>编码(encoding)</label>
+      <select id="encSel">
+        <option>MP3</option>
+        <option>OGG_OPUS</option>
+        <option>LINEAR16</option>
+      </select>
+    </div>
+    <div>
+      <label>采样率(sr，可选)</label>
+      <input id="srInput" type="number" placeholder="如 24000" />
+    </div>
+    <div>
+      <label>语速(rate 0.25~4.0)</label>
+      <input id="rateInput" type="range" min="0.25" max="4" step="0.01" value="1" />
+      <div><span id="rateVal">1.00</span></div>
+    </div>
+    <div>
+      <label>音高(pitch -20~20 半音)</label>
+      <input id="pitchInput" type="range" min="-20" max="20" step="0.1" value="0" />
+      <div><span id="pitchVal">0.0</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+    <button id="playBtn">🔊 播放语音</button>
+    <button id="listBtn" title="在日志里打印可用声音列表">📜 列出声音</button>
+  </div>
+
+  <audio id="audioPlayer" controls style="margin-top:12px"></audio>
+  <h3>📋 日志输出</h3>
+  <div id="log"></div>
+
+  <script>
+    const log = msg => {
+      const logBox = document.getElementById("log");
+      logBox.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+    };
+
+    const els = {
+      workerBase: document.getElementById('workerBase'),
+      text: document.getElementById('textInput'),
+      ssml: document.getElementById('ssmlChk'),
+      lang: document.getElementById('langSel'),
+      voice: document.getElementById('voiceSel'),
+      enc: document.getElementById('encSel'),
+      sr: document.getElementById('srInput'),
+      rate: document.getElementById('rateInput'),
+      rateVal: document.getElementById('rateVal'),
+      pitch: document.getElementById('pitchInput'),
+      pitchVal: document.getElementById('pitchVal'),
+      playBtn: document.getElementById('playBtn'),
+      listBtn: document.getElementById('listBtn'),
+      reloadVoicesBtn: document.getElementById('reloadVoicesBtn'),
+      player: document.getElementById('audioPlayer')
+    };
+
+    els.rate.addEventListener('input', () => els.rateVal.textContent = Number(els.rate.value).toFixed(2));
+    els.pitch.addEventListener('input', () => els.pitchVal.textContent = Number(els.pitch.value).toFixed(1));
+
+    function buildURL(withListOnly = false) {
+      const base = els.workerBase.value.trim().replace(/\/$/, '/')
+      const p = new URL(base);
+      if (withListOnly) {
+        p.searchParams.set('list', '1');
+      } else {
+        const text = els.text.value.trim();
+        if (!text) throw new Error('请输入文本');
+        p.searchParams.set('text', text);
+        if (els.ssml.checked) p.searchParams.set('ssml', '1');
+      }
+      p.searchParams.set('lang', els.lang.value);
+      const voice = els.voice.value || '';
+      if (voice) p.searchParams.set('voice', voice);
+      p.searchParams.set('encoding', els.enc.value);
+      const sr = els.sr.value.trim();
+      if (sr) p.searchParams.set('sr', sr);
+      p.searchParams.set('rate', els.rate.value);
+      p.searchParams.set('pitch', els.pitch.value);
+      return p.toString();
+    }
+
+    async function listVoices() {
+      try {
+        const url = buildURL(true);
+        log(`📡 列出声音: ${url}`);
+        const res = await fetch(url);
+        if (!res.ok) return log(`❌ 列表请求失败: ${res.status}`);
+        const json = await res.json();
+        log(JSON.stringify(json, null, 2));
+      } catch (e) {
+        log(`💥 异常错误: ${e.message}`);
+      }
+    }
+
+    async function loadVoices() {
+      try {
+        const url = buildURL(true);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const { data } = await res.json();
+        const list = (data?.voices || []).filter(v => (v.languageCodes || []).includes(els.lang.value));
+        // 排序：优先包含 Neural/Studio/Wavenet
+        const score = (name='') => (/neural|studio|wavenet/i.test(name) ? 0 : 1);
+        list.sort((a,b)=> score(a.name)-score(b.name) || (a.name||'').localeCompare(b.name||''));
+        els.voice.innerHTML = '';
+        for (const v of list) {
+          const o = document.createElement('option');
+          o.value = v.name;
+          o.textContent = `${v.name}  •  ${v.ssmlGender || ''}  •  ${v.naturalSampleRateHertz || ''}Hz`;
+          els.voice.appendChild(o);
+        }
+        if (!els.voice.value && list[0]) els.voice.value = list[0].name;
+        log(`✅ 加载声音成功，共 ${list.length} 个`);
+      } catch (e) {
+        log(`⚠️ 加载声音失败：${e.message}`);
+      }
+    }
+
+    async function synthesize() {
+      try {
+        const url = buildURL(false);
+        log(`📡 请求语音合成: ${url}`);
+        els.playBtn.disabled = true;
+        const res = await fetch(url);
+        if (!res.ok) {
+          log(`❌ 请求失败: ${res.status} ${res.statusText}`);
+          return;
+        }
+        // 为了确保 Audio 的 MIME 正确，自己重建 Blob
+        const buf = await res.arrayBuffer();
+        const mimeMap = { MP3: 'audio/mpeg', OGG_OPUS: 'audio/ogg', LINEAR16: 'audio/wav' };
+        const blob = new Blob([buf], { type: mimeMap[els.enc.value] || 'audio/mpeg' });
+        log(`✅ 收到音频，大小: ${blob.size} 字节`);
+        const audioURL = URL.createObjectURL(blob);
+        els.player.src = audioURL;
+        await els.player.play();
+        log('▶️ 播放成功');
+      } catch (err) {
+        log(`💥 异常错误: ${err.message}`);
+      } finally {
+        els.playBtn.disabled = false;
+      }
+    }
+
+    els.playBtn.addEventListener('click', synthesize);
+    els.listBtn.addEventListener('click', listVoices);
+    els.reloadVoicesBtn.addEventListener('click', loadVoices);
+    els.lang.addEventListener('change', loadVoices);
+    // 初始加载
+    loadVoices();
+  </script>
+</body>
+</html>
