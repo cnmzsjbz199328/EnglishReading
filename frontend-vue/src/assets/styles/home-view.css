@@ -150,10 +150,50 @@ html, body {
   max-height: none;
   overflow-y: auto;
   padding: 10px;
-  font-size: 16px;
+  font-size: 16px; /* 默认字体大小，将被内联样式覆盖 */
   line-height: 1.7;
   color: #2d3748;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* 字体大小控制按钮样式 */
+.font-size-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-size-control button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.font-size-control button:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.font-size-control button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.font-size-display {
+  font-size: 12px;
+  color: #6b7280;
+  min-width: 30px;
+  text-align: center;
+  font-weight: 500;
 }
 
 /* 文字同步高亮样式 */
@@ -364,12 +404,24 @@ textarea {
   
   .reading-content {
     padding: 16px;
-    font-size: 14px;
+    font-size: 14px; /* 小屏幕默认字体稍小 */
   }
   
   .modal {
     margin: 10px;
     max-height: calc(100vh - 20px);
+  }
+  
+  /* 字体控制按钮在小屏幕上的优化 */
+  .font-size-control button {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  .font-size-display {
+    font-size: 11px;
+    min-width: 26px;
   }
 }
 
@@ -394,5 +446,21 @@ textarea {
   .reading-content {
     padding: 12px;
     font-size: 13px;
+  }
+  
+  /* 极小屏幕上的字体控制优化 */
+  .font-size-control {
+    gap: 6px;
+  }
+  
+  .font-size-control button {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+  
+  .font-size-display {
+    font-size: 10px;
+    min-width: 24px;
   }
 }

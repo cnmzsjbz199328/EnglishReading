@@ -225,6 +225,27 @@ function deleteSelected() {
   }
 }
 
+// Font size control for reading content
+const fontSize = ref(16) // 默认字体大小 16px
+const minFontSize = 12
+const maxFontSize = 24
+
+function increaseFontSize() {
+  if (fontSize.value < maxFontSize) {
+    fontSize.value += 1
+  }
+}
+
+function decreaseFontSize() {
+  if (fontSize.value > minFontSize) {
+    fontSize.value -= 1
+  }
+}
+
+function resetFontSize() {
+  fontSize.value = 16
+}
+
 onMounted(() => {
   loadList()
 })
@@ -295,10 +316,36 @@ onMounted(() => {
         <template v-if="detail">
           <div>
             <div>
-              <div style="margin-bottom: 12px;">
+              <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <h4 style="color: #374151; margin: 0; font-weight: 600;">📚 Reading Content</h4>
+                <div class="font-size-control">
+                  <button 
+                    @click="decreaseFontSize"
+                    :disabled="fontSize <= minFontSize"
+                    title="Decrease font size"
+                  >
+                    A-
+                  </button>
+                  <span class="font-size-display">
+                    {{ fontSize }}px
+                  </span>
+                  <button 
+                    @click="increaseFontSize"
+                    :disabled="fontSize >= maxFontSize"
+                    title="Increase font size"
+                  >
+                    A+
+                  </button>
+                  <button 
+                    @click="resetFontSize"
+                    title="Reset font size to default (16px)"
+                    style="font-size: 12px;"
+                  >
+                    ⟲
+                  </button>
+                </div>
               </div>
-              <div class="reading-content" ref="readingContentRef">
+              <div class="reading-content" ref="readingContentRef" :style="{ fontSize: fontSize + 'px' }">
                 <!-- 智能文字同步显示 -->
                 <template v-if="(detail.text || detail.originalText || detail.content) && textSegments.length">
                   <template v-for="(segment, index) in textSegments" :key="index">
