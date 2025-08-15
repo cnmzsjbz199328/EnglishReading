@@ -232,20 +232,27 @@ onMounted(() => {
 
 <template>
   <div class="container">
-    <!-- 现代化头部 -->
-    <div class="header">
-      <div class="header-left">
-        <h1>English Reading</h1>
-      </div>
-      <div class="header-actions">
-        <button class="btn" @click="openModal">
-          <span>📝</span> New Exercise
-        </button>
-      </div>
-    </div>
-
     <!-- 主要内容区域 -->
     <div class="content-area">
+      <!-- 顶部操作区域 -->
+      <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; color: #2d3748;">English Reading</h1>
+        <button @click="openModal" style="
+          display: flex;
+          align-items: center;
+          padding: 8px 12px;
+          background: #667eea;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          min-width: 40px;
+          justify-content: center;
+        ">
+          <span>📝</span>
+        </button>
+      </div>
+      
       <!-- 练习选择区域 -->
       <div style="margin-bottom: 32px;">
         <div class="status" style="margin-bottom: 16px;">{{ globalStatus }}</div>
@@ -268,40 +275,30 @@ onMounted(() => {
             class="btn danger" 
             :disabled="!selectedId" 
             @click="deleteSelected"
-            style="flex: 0 0 calc(30% - 12px); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+            style="
+              flex: 0 0 calc(30% - 12px); 
+              min-width: 0; 
+              padding: 8px 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 40px;
+            "
           >
-            <span style="display: inline-block; margin-right: 4px;">🗑️</span>
-            <span class="btn-text">Delete</span>
+            <span>🗑️</span>
           </button>
         </div>
       </div>
 
       <!-- 练习详情显示 -->
-      <div id="detail" style="
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-        flex: 1 1 auto !important;
-        overflow: hidden !important;
-      ">
+      <div id="detail">
         <template v-if="detail">
-          <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 100%; box-sizing: border-box;">
-            <div style="width: 100%; max-width: 100%; box-sizing: border-box;">
+          <div>
+            <div>
               <div style="margin-bottom: 12px;">
                 <h4 style="color: #374151; margin: 0; font-weight: 600;">📚 Reading Content</h4>
               </div>
-              <div class="reading-content" 
-                ref="readingContentRef"
-                style="
-                overflow-y: auto;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                scroll-behavior: smooth;
-              ">
+              <div class="reading-content" ref="readingContentRef">
                 <!-- 智能文字同步显示 -->
                 <template v-if="(detail.text || detail.originalText || detail.content) && textSegments.length">
                   <template v-for="(segment, index) in textSegments" :key="index">
@@ -335,7 +332,7 @@ onMounted(() => {
         </template>
         
         <template v-else>
-          <div style="text-align: center; padding: 60px 20px; color: #6b7280;">
+          <div class="empty-state">
             <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.5;">🎯</div>
             <div style="font-size: 18px; margin-bottom: 8px;">Ready to Practice?</div>
             <div style="font-size: 14px;">Select an exercise from the dropdown above to begin your reading practice.</div>

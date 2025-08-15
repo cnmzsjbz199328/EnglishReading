@@ -1,4 +1,4 @@
-/* HomeView.vue 专用样式 - 极简版本 */
+/* HomeView.vue 专用样式 - 彻底重构版本 */
 
 /* 全页面高度控制 */
 html, body {
@@ -19,6 +19,79 @@ html, body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* 头部样式 - 简洁版本 */
+.header {
+  flex: 0 0 auto;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 20px rgba(102, 126, 234, 0.3);
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.header-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.header-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 按钮文本默认显示 */
+.btn-text {
+  display: inline;
+}
+
+/* 强制响应式设计 - 900px以下隐藏按钮文本 */
+@media (max-width: 900px) {
+  .header {
+    padding: 0 16px;
+  }
+  
+  .header-left h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-actions .btn {
+    padding: 8px 12px;
+    gap: 0;
+    min-width: 40px;
+    justify-content: center;
+  }
+  
+  /* 强制隐藏所有按钮文本 */
+  .btn-text {
+    display: none !important;
+  }
+  
+  .header-actions .btn .btn-text {
+    display: none !important;
+  }
+  
+  .exercise-selection .btn .btn-text {
+    display: none !important;
+  }
 }
 
 /* 内容区域占满剩余空间 */
@@ -306,6 +379,15 @@ textarea {
 }
 
 @media (max-width: 480px) {
+  .header {
+    height: 60px;
+    padding: 0 12px;
+  }
+  
+  .header-left h1 {
+    font-size: 1.3rem;
+  }
+  
   .content-area {
     padding: 12px;
   }
