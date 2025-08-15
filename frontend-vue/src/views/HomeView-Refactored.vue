@@ -122,7 +122,18 @@ loadList()
         <h1 style="margin: 0; color: #2d3748;">English Reading</h1>
         <button 
           @click="modalOpen = true" 
-          class="btn large"
+          style="
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            min-width: 40px;
+            justify-content: center;
+          "
         >
           <span>new records</span>
         </button>
