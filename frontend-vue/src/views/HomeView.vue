@@ -310,7 +310,9 @@ onMounted(() => {
             <label>🎵 Audio Source</label>
             <div style="margin-bottom: 16px;">
                             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+              <!-- 文件上传选项 -->
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; min-width: fit-content;">
                   <input 
                     type="radio" 
                     :value="'file'" 
@@ -320,93 +322,109 @@ onMounted(() => {
                   />
                   <span>📁 Upload Audio File</span>
                 </label>
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; min-width: fit-content;">
-                    <input 
-                      type="radio" 
-                      :value="'tts'" 
-                      v-model="audioSource"
-                      @change="switchToTTS"
-                      style="margin: 0;"
-                    />
-                    <span>🎤 Generate Voice</span>
-                  </label>
+                
+                <!-- 文件输入框 - 仅在选择文件时显示 -->
+                <template v-if="audioSource === 'file'">
+                  <input 
+                    id="file" 
+                    type="file" 
+                    accept="audio/*" 
+                    @change="onFileChange"
+                    style="
+                      flex: 1;
+                      min-width: 200px;
+                      padding: 8px 12px; 
+                      border: 2px dashed #d1d5db; 
+                      background: #f9fafb; 
+                      border-radius: 6px;
+                      font-size: 13px;
+                    "
+                  />
+                </template>
+              </div>
+              
+              <!-- TTS生成选项 -->
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; min-width: fit-content;">
+                  <input 
+                    type="radio" 
+                    :value="'tts'" 
+                    v-model="audioSource"
+                    @change="switchToTTS"
+                    style="margin: 0;"
+                  />
+                  <span>🎤 Generate Voice</span>
+                </label>
+                
+                <!-- TTS 控制按钮 - 仅在选择TTS时显示 -->
+                <template v-if="audioSource === 'tts'">
+                  <button
+                    @click="generateTTSAudio"
+                    :disabled="!text.trim() || isGeneratingTTS"
+                    style="
+                      padding: 8px 12px; 
+                      background: #3b82f6; 
+                      color: white; 
+                      border: none; 
+                      border-radius: 6px; 
+                      font-weight: 500;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      transition: all 0.2s;
+                      font-size: 16px;
+                      min-width: 40px;
+                      justify-content: center;
+                    "
+                    :style="{ 
+                      opacity: (!text.trim() || isGeneratingTTS) ? 0.5 : 1,
+                      background: isGeneratingTTS ? '#6b7280' : '#3b82f6' 
+                    }"
+                    :title="isGeneratingTTS ? 'Generating audio...' : 'Generate audio'"
+                  >
+                    <span v-if="isGeneratingTTS" style="
+                      width: 12px; 
+                      height: 12px; 
+                      border: 2px solid transparent; 
+                      border-top: 2px solid currentColor; 
+                      border-radius: 50%; 
+                      animation: spin 1s linear infinite;
+                    "></span>
+                    <span v-else>Start</span>
+                  </button>
                   
-                  <!-- TTS 控制按钮 - 仅在选择TTS时显示 -->
-                  <template v-if="audioSource === 'tts'">
-                    <button
-                      @click="generateTTSAudio"
-                      :disabled="!text.trim() || isGeneratingTTS"
-                      style="
-                        padding: 8px 14px; 
-                        background: #3b82f6; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 6px; 
-                        font-weight: 500;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 4px;
-                        transition: all 0.2s;
-                        font-size: 13px;
-                      "
-                      :style="{ 
-                        opacity: (!text.trim() || isGeneratingTTS) ? 0.5 : 1,
-                        background: isGeneratingTTS ? '#6b7280' : '#3b82f6' 
-                      }"
-                    >
-                      <span v-if="isGeneratingTTS" style="
-                        width: 12px; 
-                        height: 12px; 
-                        border: 2px solid transparent; 
-                        border-top: 2px solid currentColor; 
-                        border-radius: 50%; 
-                        animation: spin 1s linear infinite;
-                      "></span>
-                      <span v-else>🎤</span>
-                      {{ isGeneratingTTS ? 'generating...' : 'generate' }}
-                    </button>
-                    
-                    <button
-                      @click="showTTSSettings = !showTTSSettings"
-                      style="
-                        padding: 6px 10px; 
-                        background: white; 
-                        color: #6b7280; 
-                        border: 1px solid #d1d5db; 
-                        border-radius: 4px; 
-                        font-size: 12px;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 4px;
-                      "
-                    >
-                      <span style="font-size: 10px;">{{ showTTSSettings ? '🔼' : '🔽' }}</span>
-                      settings
-                    </button>
-                    
-                    <div style="font-size: 11px; color: #6b7280; font-style: italic;">
-                      {{ text.length }} 字符 · 预计 ~{{ Math.ceil(text.split(/\s+/).length / 150 * 60) }}秒
-                    </div>
-                  </template>
-                </div>
+                  <button
+                    @click="showTTSSettings = !showTTSSettings"
+                    style="
+                      padding: 8px 12px; 
+                      background: white; 
+                      color: #6b7280; 
+                      border: 1px solid #d1d5db; 
+                      border-radius: 6px; 
+                      font-size: 16px;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      min-width: 40px;
+                      justify-content: center;
+                    "
+                    :title="showTTSSettings ? 'Hide settings' : 'Show settings'"
+                  >
+                    <span style="font-size: 14px;">Settings</span>
+                  </button>
+                  
+                  <div style="font-size: 11px; color: #6b7280; font-style: italic;">
+                    {{ text.length }} 字符 · 预计 ~{{ Math.ceil(text.split(/\s+/).length / 150 * 60) }}秒
+                  </div>
+                </template>
               </div>
             </div>
             
-            <!-- 文件上传选项 -->
-            <div v-if="audioSource === 'file'">
-              <input 
-                id="file" 
-                type="file" 
-                accept="audio/*" 
-                @change="onFileChange"
-                style="padding: 16px; border: 2px dashed #d1d5db; background: #f9fafb; width: 100%;"
-              />
-              <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
-                Upload an audio file (MP3/WAV) that corresponds to your reading text for pronunciation practice.
-              </div>
+            <!-- 文件上传提示 -->
+            <div v-if="audioSource === 'file'" style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+              Upload an audio file (MP3/WAV) that corresponds to your reading text for pronunciation practice.
             </div>
             
             <!-- TTS生成选项 -->
@@ -542,6 +560,7 @@ onMounted(() => {
             {{ createStatus }}
           </div>
         </div>
+        </div>
       </div>
     </div>
   </div>
@@ -551,5 +570,6 @@ onMounted(() => {
     ref="floatingPlayer"
     :audio-src="audioSrc" 
     :visible="!!detail && !!audioSrc"
+    @time-update="onAudioTimeUpdate"
   />
 </template>

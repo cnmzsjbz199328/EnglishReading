@@ -198,4 +198,22 @@
   .btn-text {
     display: none;
   }
+  
+  /* Icon-only buttons remain compact on mobile */
+  .btn-icon-only {
+    width: auto !important;
+    min-width: 40px;
+    padding: 8px !important;
+  }
+  
+  /* Inline controls stack better on small screens */
+  .inline-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .inline-controls > * {
+    width: 100% !important;
+    min-width: unset !important;
+  }
 }
