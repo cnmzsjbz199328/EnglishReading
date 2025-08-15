@@ -208,8 +208,8 @@ onMounted(() => {
           <div style="font-size: 16px;">No exercises yet. Create your first one!</div>
         </div>
         
-        <div v-else class="exercise-selection" style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 200px;">
+        <div v-else class="exercise-selection" style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="flex: 0 0 70%; min-width: 0;">
             <select v-model="selectedId" @change="onSelectChange" aria-label="Select an exercise" style="width: 100%;">
               <option value="" disabled>🎯 Select an exercise to practice...</option>
               <option v-for="it in items" :key="it.id" :value="it.id">
@@ -221,7 +221,7 @@ onMounted(() => {
             class="btn danger" 
             :disabled="!selectedId" 
             @click="deleteSelected"
-            style="flex-shrink: 0; white-space: nowrap;"
+            style="flex: 0 0 calc(30% - 12px); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
           >
             <span style="display: inline-block; margin-right: 4px;">🗑️</span>
             <span class="btn-text">Delete</span>
@@ -230,10 +230,21 @@ onMounted(() => {
       </div>
 
       <!-- 练习详情显示 -->
-      <div id="detail" style="background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e3e8ef;">
+      <div id="detail" style="
+        background: #fff !important; 
+        padding: 24px !important; 
+        border-radius: 16px !important; 
+        border: 1px solid #e3e8ef !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+      ">
         <template v-if="detail">
-          <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div>
+          <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 100%; box-sizing: border-box;">
+            <div style="width: 100%; max-width: 100%; box-sizing: border-box;">
               <h4 style="color: #374151; margin-bottom: 12px; font-weight: 600;">📚 Reading Content:</h4>
               <div class="reading-content" style="
                 white-space: pre-wrap; 
@@ -246,6 +257,11 @@ onMounted(() => {
                 font-size: 15px;
                 max-height: 50vh;
                 overflow-y: auto;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
               ">
                 <template v-if="detail.text">
                   <span

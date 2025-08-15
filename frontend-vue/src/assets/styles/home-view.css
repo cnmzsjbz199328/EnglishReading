@@ -28,20 +28,21 @@
     font-size: 1.4rem !important;
   }
   
-  /* 练习选择区域在小屏幕上的优化 */
+  /* 练习选择区域在小屏幕上也保持7:3比例 */
   .exercise-selection {
-    flex-direction: column;
-    align-items: stretch !important;
-    gap: 8px;
+    gap: 8px !important;
   }
   
   .exercise-selection > div:first-child {
-    min-width: unset;
+    flex: 0 0 70% !important;
+    min-width: 0 !important;
   }
   
   .exercise-selection .btn {
-    width: 100%;
-    justify-content: center;
+    flex: 0 0 calc(30% - 8px) !important;
+    min-width: 0 !important;
+    font-size: 12px;
+    padding: 8px 4px;
   }
 }
 
@@ -54,6 +55,26 @@
   .badge {
     font-size: 10px !important;
     padding: 3px 6px !important;
+  }
+  
+  /* 超小屏幕上的7:3比例优化 */
+  .exercise-selection {
+    gap: 6px !important;
+  }
+  
+  .exercise-selection > div:first-child {
+    flex: 0 0 68% !important;
+  }
+  
+  .exercise-selection .btn {
+    flex: 0 0 calc(32% - 6px) !important;
+    font-size: 11px;
+    padding: 8px 2px;
+  }
+  
+  /* 删除按钮文字在超小屏幕隐藏，只显示图标 */
+  .exercise-selection .btn .btn-text {
+    display: none;
   }
   
   /* 模态框按钮在超小屏幕的优化 */
@@ -77,13 +98,24 @@
 
 /* 详情区域的优化 */
 #detail {
-  overflow-wrap: break-word;
-  word-wrap: break-word;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
 }
 
 #detail h3 {
   overflow-wrap: break-word;
   word-wrap: break-word;
+}
+
+#detail * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* 文本内容区域的优化 */
