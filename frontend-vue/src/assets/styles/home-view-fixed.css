@@ -312,12 +312,6 @@ html, body {
   .exercise-selection .btn .btn-text {
     display: none;
   }
-  
-  /* 模态框按钮在超小屏幕的优化 */
-  .modal .btn {
-    font-size: 12px;
-    padding: 8px 10px;
-  }
 }
 
 /* 极小屏幕优化 */

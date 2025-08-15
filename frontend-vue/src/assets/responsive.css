@@ -22,12 +22,6 @@
     border-radius: 20px;
   }
   
-  .modal {
-    padding: 24px;
-    margin: 16px;
-    border-radius: 20px;
-  }
-  
   /* 表单控件在平板上的优化 */
   input[type='text'],
   textarea,
@@ -75,25 +69,6 @@
   .content-area, .card {
     padding: 20px 16px;
     border-radius: 18px;
-  }
-  
-  /* 模态框在手机上的优化 */
-  .modal {
-    width: calc(100vw - 20px);
-    max-height: 90vh;
-    margin: 10px;
-    padding: 20px;
-    border-radius: 18px;
-  }
-  
-  .modal-header {
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  
-  .modal-header h2 {
-    font-size: 1.3em;
   }
   
   /* 表单优化 */
@@ -155,17 +130,6 @@
     margin-bottom: 16px;
   }
   
-  /* 模态框最小尺寸优化 */
-  .modal {
-    width: calc(100vw - 16px);
-    margin: 8px;
-    padding: 16px;
-  }
-  
-  .modal-header h2 {
-    font-size: 1.1em;
-  }
-  
   /* 表单元素紧凑化 */
   input[type='text'],
   textarea,
@@ -211,10 +175,6 @@
     font-size: 14px;
   }
   
-  .modal {
-    padding: 12px;
-  }
-  
   input[type='text'],
   textarea,
   select {
@@ -240,11 +200,6 @@
   
   .content-area, .card {
     padding: 16px 20px;
-  }
-  
-  .modal {
-    max-height: 95vh;
-    padding: 16px;
   }
 }
 
