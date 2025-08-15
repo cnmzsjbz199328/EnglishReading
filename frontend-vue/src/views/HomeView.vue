@@ -139,13 +139,11 @@ function regenerateTTSAudio() {
 
 // 文字同步相关
 function onAudioTimeUpdate(currentTime) {
-  console.log('📱 HomeView 收到时间更新:', currentTime)
   const oldIndex = currentSegmentIndex.value
   updateTime(currentTime)
   
   // 如果段落变化，自动滚动到当前位置
   if (currentSegmentIndex.value !== oldIndex && currentSegmentIndex.value !== -1) {
-    console.log('📜 准备滚动到段落:', currentSegmentIndex.value)
     setTimeout(() => {
       if (readingContentRef.value) {
         scrollToCurrentSegment(readingContentRef.value)
@@ -164,15 +162,6 @@ function onSegmentClick(index) {
 
 // 监听详情变化，初始化文字同步
 watch(detail, (newDetail) => {
-  console.log('👀 detail 变化:', { 
-    hasDetail: !!newDetail, 
-    hasText: !!newDetail?.text, 
-    hasOriginalText: !!newDetail?.originalText,
-    hasContent: !!newDetail?.content,
-    textLength: newDetail?.text?.length,
-    audioDuration: audioDuration.value 
-  })
-  
   // 尝试多个可能的文本字段
   const textContent = newDetail?.text || newDetail?.originalText || newDetail?.content
   
@@ -183,8 +172,6 @@ watch(detail, (newDetail) => {
 
 // 监听音频时长变化
 watch(audioDuration, (newDuration) => {
-  console.log('⏱️ 音频时长变化:', newDuration, 'detail:', !!detail.value?.text)
-  
   // 尝试多个可能的文本字段
   const textContent = detail.value?.text || detail.value?.originalText || detail.value?.content
   
@@ -195,23 +182,11 @@ watch(audioDuration, (newDuration) => {
 
 // 监听音频加载完成
 function onAudioLoaded(duration) {
-  console.log('🎵 音频加载完成:', duration, '文本长度:', detail.value?.text?.length)
-  console.log('📄 detail 对象:', detail.value)
-  
   // 尝试多个可能的文本字段
   const textContent = detail.value?.text || detail.value?.originalText || detail.value?.content
   
   if (textContent && duration > 0) {
-    console.log('✅ 开始初始化文字同步，文本长度:', textContent.length)
     initTextSync(textContent, duration)
-  } else {
-    console.warn('❌ 文字同步初始化失败:', { 
-      hasDetail: !!detail.value, 
-      hasText: !!detail.value?.text,
-      hasOriginalText: !!detail.value?.originalText,
-      hasContent: !!detail.value?.content,
-      duration 
-    })
   }
 }
 
@@ -303,10 +278,6 @@ onMounted(() => {
 
       <!-- 练习详情显示 -->
       <div id="detail" style="
-        background: #fff !important; 
-        padding: 24px !important; 
-        border-radius: 16px !important; 
-        border: 1px solid #e3e8ef !important;
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
@@ -317,46 +288,12 @@ onMounted(() => {
         <template v-if="detail">
           <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 100%; box-sizing: border-box;">
             <div style="width: 100%; max-width: 100%; box-sizing: border-box;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="margin-bottom: 12px;">
                 <h4 style="color: #374151; margin: 0; font-weight: 600;">📚 Reading Content</h4>
-                <!-- 播放进度指示器 -->
-                <div v-if="audioDuration > 0" style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6b7280;">
-                  <span>{{ Math.floor(currentTime / 60) }}:{{ String(Math.floor(currentTime % 60)).padStart(2, '0') }}</span>
-                  <div style="width: 60px; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden;">
-                    <div 
-                      style="height: 100%; background: #667eea; border-radius: 2px; transition: width 0.3s ease;"
-                      :style="{ width: progressPercent + '%' }"
-                    ></div>
-                  </div>
-                  <span>{{ Math.floor(audioDuration / 60) }}:{{ String(Math.floor(audioDuration % 60)).padStart(2, '0') }}</span>
-                  
-                  <!-- 测试按钮 -->
-                  <button 
-                    @click="() => {
-                      const textContent = detail?.text || detail?.originalText || detail?.content;
-                      if (textContent && audioDuration > 0) {
-                        console.log('🔧 手动初始化文字同步');
-                        initTextSync(textContent, audioDuration);
-                      }
-                    }"
-                    style="padding: 2px 6px; font-size: 10px; background: #3b82f6; color: white; border: none; border-radius: 3px; cursor: pointer;"
-                  >
-                    Test Init
-                  </button>
-                </div>
               </div>
               <div class="reading-content" 
                 ref="readingContentRef"
                 style="
-                white-space: pre-wrap; 
-                line-height: 1.75; 
-                background: #f8f9fa; 
-                padding: 20px; 
-                border-radius: 12px; 
-                border-left: 4px solid #667eea;
-                color: #2c3e50;
-                font-size: 15px;
-                max-height: 50vh;
                 overflow-y: auto;
                 width: 100%;
                 max-width: 100%;
@@ -367,11 +304,6 @@ onMounted(() => {
               ">
                 <!-- 智能文字同步显示 -->
                 <template v-if="(detail.text || detail.originalText || detail.content) && textSegments.length">
-                  <!-- 调试信息 -->
-                  <div style="background: #f0f0f0; padding: 8px; margin-bottom: 12px; font-size: 12px; border-radius: 4px;">
-                    Debug: 当前段落索引: {{ currentSegmentIndex }}, 总段落数: {{ textSegments.length }}, 当前时间: {{ currentTime.toFixed(1) }}s
-                  </div>
-                  
                   <template v-for="(segment, index) in textSegments" :key="index">
                     <!-- 段落开始时添加换行 -->
                     <br v-if="segment.isNewParagraph && index > 0" />

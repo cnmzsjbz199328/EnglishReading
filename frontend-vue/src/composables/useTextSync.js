@@ -116,17 +116,10 @@ export function useTextSync() {
 
   // 初始化文本同步
   function initTextSync(text, duration) {
-    console.log('🎯 初始化文字同步:', { text: text?.length, duration })
     textSegments.value = segmentText(text)
     audioDuration.value = duration
     timings.value = computeTimings(duration, textSegments.value)
     currentSegmentIndex.value = -1
-    
-    console.log('✅ 文字同步初始化完成:', {
-      segments: textSegments.value.length,
-      timings: timings.value.length,
-      firstTiming: timings.value[0]
-    })
   }
 
   // 更新当前播放时间
@@ -135,14 +128,6 @@ export function useTextSync() {
     const newIndex = findCurrentSegment(time)
     
     if (newIndex !== currentSegmentIndex.value) {
-      console.log('🔄 段落切换:', { 
-        time, 
-        oldIndex: currentSegmentIndex.value, 
-        newIndex,
-        segment: textSegments.value[newIndex]?.text?.substring(0, 30) + '...',
-        timing: timings.value[newIndex],
-        isNewParagraph: textSegments.value[newIndex]?.isNewParagraph
-      })
       currentSegmentIndex.value = newIndex
     }
   }

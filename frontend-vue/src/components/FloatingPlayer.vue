@@ -178,7 +178,6 @@ const onTimeUpdate = () => {
   if (audioElement.value) {
     currentTime.value = audioElement.value.currentTime || 0
     // 触发时间更新事件，用于文字同步
-    console.log('🎵 音频时间更新:', currentTime.value)
     emit('time-update', currentTime.value)
   }
 }
