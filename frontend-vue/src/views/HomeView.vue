@@ -372,18 +372,23 @@ onMounted(() => {
                     Debug: 当前段落索引: {{ currentSegmentIndex }}, 总段落数: {{ textSegments.length }}, 当前时间: {{ currentTime.toFixed(1) }}s
                   </div>
                   
-                  <span
-                    v-for="(segment, index) in textSegments"
-                    :key="index"
-                    :data-segment-index="index"
-                    :class="[
-                      'text-segment',
-                      `segment-${getSegmentStatus(index)}`
-                    ]"
-                    @click="onSegmentClick(index)"
-                    :title="`Segment ${index + 1} - Click to jump`"
-                    style="cursor: pointer;"
-                  >{{ segment }}<span v-if="index < textSegments.length - 1"> </span></span>
+                  <template v-for="(segment, index) in textSegments" :key="index">
+                    <!-- 段落开始时添加换行 -->
+                    <br v-if="segment.isNewParagraph && index > 0" />
+                    <span
+                      :data-segment-index="index"
+                      :class="[
+                        'text-segment',
+                        `segment-${getSegmentStatus(index)}`,
+                        { 'paragraph-start': segment.isNewParagraph }
+                      ]"
+                      @click="onSegmentClick(index)"
+                      :title="`Segment ${index + 1} - Click to jump`"
+                      style="cursor: pointer;"
+                    >{{ segment.text }}</span>
+                    <!-- 句子间加空格，段落间不加 -->
+                    <span v-if="index < textSegments.length - 1 && !textSegments[index + 1]?.isNewParagraph"> </span>
+                  </template>
                 </template>
                 <!-- 简单显示模式 -->
                 <template v-else-if="detail.text || detail.originalText || detail.content">

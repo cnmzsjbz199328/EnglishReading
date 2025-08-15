@@ -7,32 +7,54 @@ export function useTextSync() {
   const timings = ref([])
   const currentSegmentIndex = ref(-1)
 
-  // 智能分段：优先按句子，其次按短语，最后按单词
+  // 智能分段：保持段落结构，按句子分割
   function segmentText(text) {
     if (!text) return []
     
-    // 1. 先按段落分割
-    const paragraphs = text.split(/\n+/).filter(Boolean)
-    
     let segments = []
-    for (const para of paragraphs) {
-      // 2. 按句子分割 (改进的正则表达式)
+    
+    // 1. 按段落分割（保持段落结构）
+    const paragraphs = text.split(/\n+/)
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+      const para = paragraphs[i].trim()
+      if (!para) continue
+      
+      // 2. 按句子分割段落内容
       const sentences = para.split(/(?<=[.!?。！？])\s+/)
         .filter(s => s.trim().length > 0)
       
-      for (const sentence of sentences) {
-        // 3. 如果句子太长(>100字符)，按短语分割
-        if (sentence.length > 100) {
+      for (let j = 0; j < sentences.length; j++) {
+        const sentence = sentences[j].trim()
+        if (!sentence) continue
+        
+        // 3. 如果句子太长(>150字符)，按短语分割
+        if (sentence.length > 150) {
           const phrases = sentence.split(/(?<=[,;，；])\s+/)
             .filter(p => p.trim().length > 0)
-          segments.push(...phrases)
+          
+          phrases.forEach((phrase, k) => {
+            segments.push({
+              text: phrase.trim(),
+              isNewParagraph: j === 0 && k === 0, // 段落的第一个句子的第一个短语
+              paragraphIndex: i,
+              sentenceIndex: j,
+              phraseIndex: k
+            })
+          })
         } else {
-          segments.push(sentence)
+          segments.push({
+            text: sentence,
+            isNewParagraph: j === 0, // 段落的第一个句子
+            paragraphIndex: i,
+            sentenceIndex: j,
+            phraseIndex: 0
+          })
         }
       }
     }
     
-    return segments.map(s => s.trim()).filter(Boolean)
+    return segments
   }
 
   // 智能时间分配：考虑标点停顿和阅读难度
@@ -42,14 +64,17 @@ export function useTextSync() {
     
     // 计算每段的权重
     const weights = segments.map(segment => {
-      let weight = segment.replace(/\s+/g, ' ').length
+      let weight = segment.text.replace(/\s+/g, ' ').length
       
       // 句末标点增加停顿权重
-      if (/[.!?。！？]$/.test(segment)) weight += 10
-      if (/[,;，；]$/.test(segment)) weight += 5
+      if (/[.!?。！？]$/.test(segment.text)) weight += 10
+      if (/[,;，；]$/.test(segment.text)) weight += 5
+      
+      // 段落开始增加停顿权重
+      if (segment.isNewParagraph) weight += 15
       
       // 复杂单词增加权重
-      const complexWords = segment.match(/\b\w{7,}\b/g) || []
+      const complexWords = segment.text.match(/\b\w{7,}\b/g) || []
       weight += complexWords.length * 3
       
       return Math.max(weight, 1)
@@ -114,8 +139,9 @@ export function useTextSync() {
         time, 
         oldIndex: currentSegmentIndex.value, 
         newIndex,
-        segment: textSegments.value[newIndex]?.substring(0, 30) + '...',
-        timing: timings.value[newIndex]
+        segment: textSegments.value[newIndex]?.text?.substring(0, 30) + '...',
+        timing: timings.value[newIndex],
+        isNewParagraph: textSegments.value[newIndex]?.isNewParagraph
       })
       currentSegmentIndex.value = newIndex
     }
