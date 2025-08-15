@@ -2,7 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useRecordings } from '../composables/useRecordings'
 import FloatingPlayer from '../components/FloatingPlayer.vue'
-import TTSAudioGenerator from '../components/TTSAudioGenerator.vue'
+// 引入组件专用样式
+import '../assets/styles/home-view.css'
 
 const {
   items,
@@ -27,6 +28,22 @@ const file = ref(null)
 const showTTSGenerator = ref(false)
 const audioSource = ref('file') // 'file' 或 'tts'
 
+// TTS 相关状态
+const showTTSSettings = ref(false)
+const isGeneratingTTS = ref(false)
+const generatedAudioUrl = ref(null)
+const generatedAudioBlob = ref(null)
+const ttsSettings = ref({
+  language: 'en-US',
+  rate: 1.0,
+  voice: 'auto',
+  pitch: 0
+})
+
+// 文字同步状态
+const currentPlayTime = ref(0)
+const highlightedWordIndex = ref(-1)
+
 // 浮动播放器引用
 const floatingPlayer = ref(null)
 
@@ -45,14 +62,93 @@ function clearForm() {
   file.value = null
   audioSource.value = 'file'
   showTTSGenerator.value = false
+  showTTSSettings.value = false
+  generatedAudioUrl.value = null
+  generatedAudioBlob.value = null
   const el = document.getElementById('file')
   if (el) el.value = ''
 }
 
 // TTS相关函数
+async function generateTTSAudio() {
+  if (!text.value.trim()) return
+  
+  isGeneratingTTS.value = true
+  try {
+    // 这里调用 TTS API
+    const response = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/tts/preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: text.value.trim(),
+        language: ttsSettings.value.language,
+        voice: ttsSettings.value.voice,
+        rate: ttsSettings.value.rate,
+        pitch: ttsSettings.value.pitch,
+        encoding: 'MP3'
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`TTS failed: ${response.status}`)
+    }
+    
+    const audioBlob = await response.blob()
+    generatedAudioBlob.value = audioBlob
+    
+    // 清理之前的 URL
+    if (generatedAudioUrl.value) {
+      URL.revokeObjectURL(generatedAudioUrl.value)
+    }
+    
+    generatedAudioUrl.value = URL.createObjectURL(audioBlob)
+    
+  } catch (error) {
+    console.error('TTS generation failed:', error)
+    alert('语音生成失败: ' + error.message)
+  } finally {
+    isGeneratingTTS.value = false
+  }
+}
+
+function confirmTTSAudio() {
+  if (generatedAudioBlob.value) {
+    // 创建 File 对象
+    file.value = new File([generatedAudioBlob.value], 'tts-audio.mp3', {
+      type: 'audio/mpeg'
+    })
+  }
+}
+
+function regenerateTTSAudio() {
+  generateTTSAudio()
+}
+
+// 文字同步相关
+function onAudioTimeUpdate(currentTime) {
+  currentPlayTime.value = currentTime
+  // 简单的单词高亮逻辑 - 根据时间估算当前单词位置
+  if (detail.value?.text) {
+    const totalWords = detail.value.text.split(/\s+/).length
+    const estimatedDuration = Math.ceil(totalWords / 150 * 60) // 假设150词/分钟
+    const wordProgress = (currentTime / estimatedDuration) * totalWords
+    highlightedWordIndex.value = Math.floor(wordProgress)
+  }
+}
+
+function getWordClass(wordIndex) {
+  if (highlightedWordIndex.value === -1) return ''
+  if (wordIndex === highlightedWordIndex.value) return 'word-current'
+  if (wordIndex < highlightedWordIndex.value) return 'word-past'
+  return ''
+}
+
+// dropdown selection for exercises
+
+// TTS相关函数
 function switchToTTS() {
   audioSource.value = 'tts'
-  showTTSGenerator.value = true
+  showTTSGenerator.value = false
   file.value = null
   const el = document.getElementById('file')
   if (el) el.value = ''
@@ -62,13 +158,12 @@ function switchToFileUpload() {
   audioSource.value = 'file'
   showTTSGenerator.value = false
   file.value = null
-}
-
-function onTTSAudioGenerated(audioData) {
-  // 将TTS生成的音频设置为文件
-  file.value = audioData.file
-  showTTSGenerator.value = false
-  // 可以添加一些用户反馈
+  // 清理 TTS 相关状态
+  if (generatedAudioUrl.value) {
+    URL.revokeObjectURL(generatedAudioUrl.value)
+    generatedAudioUrl.value = null
+  }
+  generatedAudioBlob.value = null
 }
 
 // dropdown selection for exercises
@@ -142,32 +237,25 @@ onMounted(() => {
               <h4 style="color: #374151; margin-bottom: 12px; font-weight: 600;">📚 Reading Content:</h4>
               <div class="reading-content" style="
                 white-space: pre-wrap; 
-                line-height: 1.7; 
+                line-height: 1.75; 
                 background: #f8f9fa; 
                 padding: 20px; 
                 border-radius: 12px; 
                 border-left: 4px solid #667eea;
                 color: #2c3e50;
                 font-size: 15px;
-              ">{{ detail.text || detail.originalText }}</div>
-            </div>
-            
-            <div>
-              <h4 style="color: #374151; margin-bottom: 12px; font-weight: 600;">🎵 Audio Practice:</h4>
-              <div style="
-                padding: 20px; 
-                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                border-radius: 12px; 
-                border-left: 4px solid #0ea5e9;
-                color: #0c4a6e;
-                font-size: 15px;
-                text-align: center;
+                max-height: 50vh;
+                overflow-y: auto;
               ">
-                <div style="font-size: 48px; margin-bottom: 12px;">🎧</div>
-                <div style="font-weight: 600; margin-bottom: 8px;">现代化音频播放器已准备就绪</div>
-                <div style="font-size: 14px; opacity: 0.8;">
-                  页面底部的浮动播放器提供了专业的音频控制功能，包括速度调节、音量控制和进度跳转。
-                </div>
+                <template v-if="detail.text">
+                  <span
+                    v-for="(word, index) in detail.text.split(/(\s+)/)"
+                    :key="index"
+                    :class="getWordClass(Math.floor(index / 2))"
+                    class="word-segment"
+                  >{{ word }}</span>
+                </template>
+                <template v-else>{{ detail.originalText }}</template>
               </div>
             </div>
           </div>
@@ -221,27 +309,89 @@ onMounted(() => {
           <div>
             <label>🎵 Audio Source</label>
             <div style="margin-bottom: 16px;">
-              <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+                            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
                   <input 
                     type="radio" 
                     :value="'file'" 
                     v-model="audioSource"
-                    @change="switchToFileUpload"
+                    @change="switchToFile"
                     style="margin: 0;"
                   />
                   <span>📁 Upload Audio File</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
-                  <input 
-                    type="radio" 
-                    :value="'tts'" 
-                    v-model="audioSource"
-                    @change="switchToTTS"
-                    style="margin: 0;"
-                  />
-                  <span>🎤 Generate with Text-to-Speech</span>
-                </label>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; min-width: fit-content;">
+                    <input 
+                      type="radio" 
+                      :value="'tts'" 
+                      v-model="audioSource"
+                      @change="switchToTTS"
+                      style="margin: 0;"
+                    />
+                    <span>🎤 Generate Voice</span>
+                  </label>
+                  
+                  <!-- TTS 控制按钮 - 仅在选择TTS时显示 -->
+                  <template v-if="audioSource === 'tts'">
+                    <button
+                      @click="generateTTSAudio"
+                      :disabled="!text.trim() || isGeneratingTTS"
+                      style="
+                        padding: 8px 14px; 
+                        background: #3b82f6; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 6px; 
+                        font-weight: 500;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: all 0.2s;
+                        font-size: 13px;
+                      "
+                      :style="{ 
+                        opacity: (!text.trim() || isGeneratingTTS) ? 0.5 : 1,
+                        background: isGeneratingTTS ? '#6b7280' : '#3b82f6' 
+                      }"
+                    >
+                      <span v-if="isGeneratingTTS" style="
+                        width: 12px; 
+                        height: 12px; 
+                        border: 2px solid transparent; 
+                        border-top: 2px solid currentColor; 
+                        border-radius: 50%; 
+                        animation: spin 1s linear infinite;
+                      "></span>
+                      <span v-else>🎤</span>
+                      {{ isGeneratingTTS ? 'generating...' : 'generate' }}
+                    </button>
+                    
+                    <button
+                      @click="showTTSSettings = !showTTSSettings"
+                      style="
+                        padding: 6px 10px; 
+                        background: white; 
+                        color: #6b7280; 
+                        border: 1px solid #d1d5db; 
+                        border-radius: 4px; 
+                        font-size: 12px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                      "
+                    >
+                      <span style="font-size: 10px;">{{ showTTSSettings ? '🔼' : '🔽' }}</span>
+                      settings
+                    </button>
+                    
+                    <div style="font-size: 11px; color: #6b7280; font-style: italic;">
+                      {{ text.length }} 字符 · 预计 ~{{ Math.ceil(text.split(/\s+/).length / 150 * 60) }}秒
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
             
@@ -260,28 +410,51 @@ onMounted(() => {
             </div>
             
             <!-- TTS生成选项 -->
-            <div v-else-if="audioSource === 'tts'">
-              <div v-if="!showTTSGenerator" style="
-                padding: 20px; 
-                background: linear-gradient(135deg, #fef3e2 0%, #fef9e7 100%); 
-                border: 2px dashed #f59e0b; 
-                border-radius: 12px;
-                text-align: center;
-                cursor: pointer;
-              " @click="showTTSGenerator = true">
-                <div style="font-size: 48px; margin-bottom: 12px;">🎤</div>
-                <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">Generate Audio with AI</div>
-                <div style="font-size: 14px; color: #a16207;">
-                  Click here to use Text-to-Speech technology to automatically generate audio from your reading text.
+            <div v-else-if="audioSource === 'tts'">              
+              <!-- TTS 高级设置（可折叠） -->
+              <div v-if="showTTSSettings" style="
+                background: #f9fafb; 
+                border: 1px solid #e5e7eb; 
+                border-radius: 8px; 
+                padding: 16px; 
+                margin-bottom: 16px;
+              ">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">语言</label>
+                    <select v-model="ttsSettings.language" style="
+                      width: 100%; 
+                      padding: 6px 8px; 
+                      border: 1px solid #d1d5db; 
+                      border-radius: 6px; 
+                      font-size: 13px;
+                    ">
+                      <option value="en-US">English (US)</option>
+                      <option value="en-GB">English (UK)</option>
+                      <option value="en-AU">English (AU)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">语速: {{ ttsSettings.rate }}x</label>
+                    <input 
+                      v-model.number="ttsSettings.rate" 
+                      type="range" 
+                      min="0.5" 
+                      max="2.0" 
+                      step="0.1"
+                      style="width: 100%; height: 6px; border-radius: 3px; background: #e5e7eb;"
+                    />
+                  </div>
                 </div>
               </div>
               
+              <!-- 生成成功提示 -->
               <div v-if="file && audioSource === 'tts'" style="
                 padding: 16px; 
                 background: #f0f9ff; 
                 border: 2px solid #0ea5e9; 
                 border-radius: 8px;
-                margin-top: 12px;
+                margin-bottom: 16px;
               ">
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <span style="font-size: 24px;">✅</span>
@@ -291,6 +464,52 @@ onMounted(() => {
                       Audio has been generated and is ready to use with your exercise.
                     </div>
                   </div>
+                </div>
+              </div>
+              
+              <!-- 音频预览 -->
+              <div v-if="generatedAudioUrl" style="
+                background: #f0f9ff; 
+                border: 2px solid #bae6fd; 
+                border-radius: 8px; 
+                padding: 16px;
+                margin-bottom: 16px;
+              ">
+                <div style="font-weight: 600; color: #0369a1; margin-bottom: 12px;">🎵 音频预览</div>
+                <audio 
+                  :src="generatedAudioUrl" 
+                  controls 
+                  style="width: 100%; margin-bottom: 12px;"
+                  preload="metadata"
+                ></audio>
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                  <button
+                    @click="confirmTTSAudio"
+                    style="
+                      padding: 8px 16px; 
+                      background: #10b981; 
+                      color: white; 
+                      border: none; 
+                      border-radius: 6px; 
+                      font-weight: 500;
+                      cursor: pointer;
+                    "
+                  >
+                    ✓ 使用此音频
+                  </button>
+                  <button
+                    @click="regenerateTTSAudio"
+                    style="
+                      padding: 8px 16px; 
+                      background: white; 
+                      color: #6b7280; 
+                      border: 1px solid #d1d5db; 
+                      border-radius: 6px;
+                      cursor: pointer;
+                    "
+                  >
+                    🔄 重新生成
+                  </button>
                 </div>
               </div>
             </div>
@@ -323,14 +542,6 @@ onMounted(() => {
             {{ createStatus }}
           </div>
         </div>
-        
-        <!-- TTS Audio Generator -->
-        <div v-if="showTTSGenerator && audioSource === 'tts'" style="margin-top: 20px;">
-          <TTSAudioGenerator 
-            @audioGenerated="onTTSAudioGenerated"
-            @close="showTTSGenerator = false"
-          />
-        </div>
       </div>
     </div>
   </div>
@@ -342,122 +553,3 @@ onMounted(() => {
     :visible="!!detail && !!audioSrc"
   />
 </template>
-
-<style scoped>
-/* 组件级响应式优化 */
-@media (max-width: 640px) {
-  .btn-text {
-    display: none;
-  }
-  
-  .header-actions .btn {
-    padding: 10px 12px;
-  }
-  
-  .header-actions .btn span:first-child {
-    margin-right: 0 !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .header {
-    gap: 12px;
-  }
-  
-  .header-left {
-    gap: 8px;
-  }
-  
-  .header h1 {
-    font-size: 1.4rem !important;
-  }
-  
-  /* 练习选择区域在小屏幕上的优化 */
-  .exercise-selection {
-    flex-direction: column;
-    align-items: stretch !important;
-    gap: 8px;
-  }
-  
-  .exercise-selection > div:first-child {
-    min-width: unset;
-  }
-  
-  .exercise-selection .btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 360px) {
-  .header h1 {
-    font-size: 1.2rem !important;
-    line-height: 1.3;
-  }
-  
-  .badge {
-    font-size: 10px !important;
-    padding: 3px 6px !important;
-  }
-  
-  /* 模态框按钮在超小屏幕的优化 */
-  .modal .btn {
-    font-size: 12px;
-    padding: 8px 10px;
-  }
-}
-
-/* 音频元素的额外样式 */
-.audio {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px solid #dee2e6;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-.audio:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-/* 详情区域的优化 */
-#detail {
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-#detail h3 {
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-/* 文本内容区域的优化 */
-.reading-content {
-  max-height: 300px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
-}
-
-@media (max-width: 640px) {
-  .reading-content {
-    max-height: 250px;
-    font-size: 14px;
-  }
-}
-
-/* 空状态图标的动画 */
-.empty-state-icon {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .empty-state-icon {
-    animation: none;
-  }
-}
-</style>

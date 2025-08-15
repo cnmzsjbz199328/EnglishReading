@@ -1,0 +1,169 @@
+/* HomeView.vue 专用样式 */
+
+/* 组件级响应式优化 */
+@media (max-width: 640px) {
+  .btn-text {
+    display: none;
+  }
+  
+  .header-actions .btn {
+    padding: 10px 12px;
+  }
+  
+  .header-actions .btn span:first-child {
+    margin-right: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    gap: 12px;
+  }
+  
+  .header-left {
+    gap: 8px;
+  }
+  
+  .header h1 {
+    font-size: 1.4rem !important;
+  }
+  
+  /* 练习选择区域在小屏幕上的优化 */
+  .exercise-selection {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px;
+  }
+  
+  .exercise-selection > div:first-child {
+    min-width: unset;
+  }
+  
+  .exercise-selection .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .header h1 {
+    font-size: 1.2rem !important;
+    line-height: 1.3;
+  }
+  
+  .badge {
+    font-size: 10px !important;
+    padding: 3px 6px !important;
+  }
+  
+  /* 模态框按钮在超小屏幕的优化 */
+  .modal .btn {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
+
+/* 音频元素的额外样式 */
+.audio {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.audio:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 详情区域的优化 */
+#detail {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+#detail h3 {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* 文本内容区域的优化 */
+.reading-content {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+}
+
+@media (max-width: 640px) {
+  .reading-content {
+    max-height: 250px;
+    font-size: 14px;
+  }
+}
+
+/* 空状态图标的动画 */
+.empty-state-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state-icon {
+    animation: none;
+  }
+}
+
+/* TTS 按钮动画 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Text synchronization styles */
+.word-segment {
+  display: inline;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  padding: 2px 1px;
+  border-radius: 3px;
+}
+
+.word-segment.highlight-current {
+  background-color: #fbbf24;
+  color: #1f2937;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(251, 191, 36, 0.3);
+}
+
+.word-segment.highlight-passed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.word-segment.highlight-upcoming {
+  background-color: transparent;
+  color: #6b7280;
+}
+
+/* Enhanced scrollbar for reading content */
+.reading-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reading-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.reading-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.reading-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

@@ -67,6 +67,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['timeUpdate'])
+
 // 音频元素引用
 const audioElement = ref(null)
 const progressBar = ref(null)
@@ -172,6 +174,8 @@ const onLoadedMetadata = () => {
 const onTimeUpdate = () => {
   if (audioElement.value) {
     currentTime.value = audioElement.value.currentTime || 0
+    // 触发时间更新事件，用于文字同步
+    emit('timeUpdate', currentTime.value)
   }
 }
 
