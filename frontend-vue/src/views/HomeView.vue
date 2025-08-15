@@ -4,7 +4,7 @@ import { useRecordings } from '../composables/useRecordings'
 import { useTextSync } from '../composables/useTextSync'
 import FloatingPlayer from '../components/FloatingPlayer.vue'
 // 引入组件专用样式
-import '../assets/styles/home-view-new.css'
+import '../assets/styles/home-view.css'
 
 const {
   items,
