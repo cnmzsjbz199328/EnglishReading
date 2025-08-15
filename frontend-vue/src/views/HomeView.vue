@@ -249,7 +249,7 @@ onMounted(() => {
           min-width: 40px;
           justify-content: center;
         ">
-          <span>📝</span>
+          <span>new records</span>
         </button>
       </div>
       
@@ -624,17 +624,22 @@ onMounted(() => {
             </div>
           </div>
           
-          <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+          <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: nowrap;">
             <button
               class="btn"
               :disabled="loadingSubmit"
               @click="submit({ title, text, file: file })"
-              style="flex: 1; min-width: 150px;"
+              style="flex: 2; min-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
             >
               {{ loadingSubmit ? '⏳ Uploading...' : '🚀 Create Exercise' }}
             </button>
-            <button class="btn secondary" :disabled="loadingSubmit" @click="clearForm">
-              🔄 Clear Form
+            <button 
+              class="btn secondary" 
+              :disabled="loadingSubmit" 
+              @click="clearForm"
+              style="flex: 1; min-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+            >
+              🔄 Clear
             </button>
           </div>
           
