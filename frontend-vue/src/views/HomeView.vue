@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRecordings } from '../composables/useRecordings'
 import { useTextSync } from '../composables/useTextSync'
 import FloatingPlayer from '../components/FloatingPlayer.vue'
-// 引入组件专用样式
+// Import component-specific styles
 import '../assets/styles/home-view.css'
 
 const {
@@ -27,9 +27,9 @@ const title = ref('')
 const text = ref('')
 const file = ref(null)
 const showTTSGenerator = ref(false)
-const audioSource = ref('file') // 'file' 或 'tts'
+const audioSource = ref('file') // 'file' or 'tts'
 
-// TTS 相关状态
+// TTS related states
 const showTTSSettings = ref(false)
 const isGeneratingTTS = ref(false)
 const generatedAudioUrl = ref(null)
@@ -41,7 +41,7 @@ const ttsSettings = ref({
   pitch: 0
 })
 
-// 智能文字同步
+// Smart text synchronization
 const {
   currentTime,
   audioDuration,
@@ -56,7 +56,7 @@ const {
   scrollToCurrentSegment
 } = useTextSync()
 
-// 浮动播放器引用
+// Floating player reference
 const floatingPlayer = ref(null)
 const readingContentRef = ref(null)
 
@@ -82,13 +82,13 @@ function clearForm() {
   if (el) el.value = ''
 }
 
-// TTS相关函数
+// TTS related functions
 async function generateTTSAudio() {
   if (!text.value.trim()) return
   
   isGeneratingTTS.value = true
   try {
-    // 这里调用 TTS API
+    // Call TTS API here
     const response = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/tts/preview`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -109,7 +109,7 @@ async function generateTTSAudio() {
     const audioBlob = await response.blob()
     generatedAudioBlob.value = audioBlob
     
-    // 清理之前的 URL
+    // Clean up previous URL
     if (generatedAudioUrl.value) {
       URL.revokeObjectURL(generatedAudioUrl.value)
     }
@@ -118,7 +118,7 @@ async function generateTTSAudio() {
     
   } catch (error) {
     console.error('TTS generation failed:', error)
-    alert('语音生成失败: ' + error.message)
+    alert('TTS generation failed: ' + error.message)
   } finally {
     isGeneratingTTS.value = false
   }
@@ -126,7 +126,7 @@ async function generateTTSAudio() {
 
 function confirmTTSAudio() {
   if (generatedAudioBlob.value) {
-    // 创建 File 对象
+    // Create File object
     file.value = new File([generatedAudioBlob.value], 'tts-audio.mp3', {
       type: 'audio/mpeg'
     })
@@ -137,22 +137,22 @@ function regenerateTTSAudio() {
   generateTTSAudio()
 }
 
-// 文字同步相关
+// Text synchronization related
 function onAudioTimeUpdate(currentTime) {
   const oldIndex = currentSegmentIndex.value
   updateTime(currentTime)
   
-  // 如果段落变化，自动滚动到当前位置
+  // If paragraph changes, auto-scroll to current position
   if (currentSegmentIndex.value !== oldIndex && currentSegmentIndex.value !== -1) {
     setTimeout(() => {
       if (readingContentRef.value) {
         scrollToCurrentSegment(readingContentRef.value)
       }
-    }, 100) // 小延迟确保DOM更新完成
+    }, 100) // Small delay to ensure DOM update completion
   }
 }
 
-// 点击段落跳转
+// Click paragraph to jump
 function onSegmentClick(index) {
   const seekTime = seekToSegment(index)
   if (floatingPlayer.value && floatingPlayer.value.seekTo) {
@@ -507,7 +507,7 @@ onMounted(() => {
                   </button>
                   
                   <div style="font-size: 11px; color: #6b7280; font-style: italic;">
-                    {{ text.length }} 字符 · 预计 ~{{ Math.ceil(text.split(/\s+/).length / 150 * 60) }}秒
+                    {{ text.length }} characters · Est. ~{{ Math.ceil(text.split(/\s+/).length / 150 * 60) }}s
                   </div>
                 </template>
               </div>
@@ -530,7 +530,7 @@ onMounted(() => {
               ">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                   <div>
-                    <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">语言</label>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">Language</label>
                     <select v-model="ttsSettings.language" style="
                       width: 100%; 
                       padding: 6px 8px; 
@@ -544,7 +544,7 @@ onMounted(() => {
                     </select>
                   </div>
                   <div>
-                    <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">语速: {{ ttsSettings.rate }}x</label>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">Speed: {{ ttsSettings.rate }}x</label>
                     <input 
                       v-model.number="ttsSettings.rate" 
                       type="range" 
@@ -584,7 +584,7 @@ onMounted(() => {
                 padding: 16px;
                 margin-bottom: 16px;
               ">
-                <div style="font-weight: 600; color: #0369a1; margin-bottom: 12px;">🎵 音频预览</div>
+                <div style="font-weight: 600; color: #0369a1; margin-bottom: 12px;">🎵 Audio Preview</div>
                 <audio 
                   :src="generatedAudioUrl" 
                   controls 
@@ -604,7 +604,7 @@ onMounted(() => {
                       cursor: pointer;
                     "
                   >
-                    ✓ 使用此音频
+                    ✓ Use This Audio
                   </button>
                   <button
                     @click="regenerateTTSAudio"
@@ -617,7 +617,7 @@ onMounted(() => {
                       cursor: pointer;
                     "
                   >
-                    🔄 重新生成
+                    🔄 Regenerate
                   </button>
                 </div>
               </div>

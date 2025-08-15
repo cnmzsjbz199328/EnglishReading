@@ -71,7 +71,7 @@ export function useTTS() {
         globalTTSState.voicesLoaded = true
         return response.data.voices
       } else {
-        throw new Error(response.error || '获取声音列表失败')
+        throw new Error(response.error || 'Failed to get voice list')
       }
     } catch (error) {
       console.error('Load voices error:', error)
@@ -85,7 +85,7 @@ export function useTTS() {
   // 语音合成
   async function generateAudio(text, options = {}) {
     if (!text || !text.trim()) {
-      throw new Error('文本内容不能为空')
+      throw new Error('Text content cannot be empty')
     }
 
     // 创建缓存键
@@ -168,7 +168,7 @@ export function useTTS() {
         console.error('Audio playback error:', e)
         globalTTSState.isPlaying = false
         globalTTSState.currentAudio = null
-        globalTTSState.error = '音频播放失败'
+        globalTTSState.error = 'Audio playback failed'
       })
 
       // 播放音频
@@ -177,7 +177,7 @@ export function useTTS() {
       console.error('Play audio error:', error)
       globalTTSState.isPlaying = false
       globalTTSState.currentAudio = null
-      globalTTSState.error = '无法播放音频'
+      globalTTSState.error = 'Unable to play audio'
       throw error
     }
   }
@@ -211,7 +211,7 @@ export function useTTS() {
   // 下载音频文件
   function downloadAudio(filename = null) {
     if (!generatedBlob.value) {
-      throw new Error('没有可下载的音频')
+      throw new Error('No audio available for download')
     }
 
     const name = filename || `tts-audio-${Date.now()}.mp3`

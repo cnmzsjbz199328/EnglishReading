@@ -1,4 +1,4 @@
-/* 浮动播放器样式 - 基于FrontEndForVOA设计 */
+/* Floating Player Styles - Based on FrontEndForVOA Design */
 
 .floating-player {
   position: fixed;
@@ -33,14 +33,14 @@
   display: none;
 }
 
-/* 播放器内部布局 */
+/* Player Internal Layout */
 .player-row {
   display: flex;
   align-items: center;
   gap: 18px;
 }
 
-/* 播放按钮 */
+/* Play Button */
 .play-btn {
   width: 56px;
   height: 56px;
@@ -66,7 +66,7 @@
   transform: scale(0.98);
 }
 
-/* 进度条容器 */
+/* Progress Container */
 .progress-container {
   flex: 1;
   display: flex;
@@ -74,7 +74,7 @@
   gap: 6px;
 }
 
-/* 时间显示 */
+/* Time Display */
 .time-bar {
   display: flex;
   justify-content: space-between;
@@ -82,7 +82,7 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* 进度条 */
+/* Progress Bar */
 .progress-bar {
   height: 7px;
   background: rgba(255, 255, 255, 0.18);
@@ -120,7 +120,7 @@
   opacity: 1;
 }
 
-/* 速度控制 */
+/* Speed Control */
 .speed-control {
   display: flex;
   align-items: center;
@@ -154,7 +154,7 @@
   font-size: 13px;
 }
 
-/* 音量控制 */
+/* Volume Control */
 .volume-control {
   display: flex;
   align-items: center;
@@ -208,19 +208,19 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* 无媒体状态 */
+/* No Media State */
 .no-media {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
   margin-right: 14px;
 }
 
-/* 隐藏音频元素 */
+/* Hidden Audio Element */
 .hidden-audio {
   display: none !important;
 }
 
-/* 响应式设计 */
+/* Responsive Design */
 @media (max-width: 860px) {
   .floating-player {
     min-width: 0;
@@ -327,7 +327,7 @@
   }
 }
 
-/* iOS 安全区域支持 */
+/* iOS Safe Area Support */
 @supports (padding: max(0px)) {
   .floating-player {
     padding-bottom: calc(14px + env(safe-area-inset-bottom));

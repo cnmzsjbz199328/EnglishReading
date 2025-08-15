@@ -72,7 +72,7 @@ export const ttsApi = {
       return await response.json()
     } catch (error) {
       console.error('TTS getVoices error:', error)
-      throw new Error(error.message || '网络错误，无法获取声音列表')
+      throw new Error(error.message || 'Network error, unable to get voice list')
     }
   },
 
@@ -101,7 +101,7 @@ export const ttsApi = {
       } = options
 
       if (!text || !text.trim()) {
-        throw new Error('文本内容不能为空')
+        throw new Error('Text content cannot be empty')
       }
 
       const requestBody = {
@@ -132,7 +132,7 @@ export const ttsApi = {
       return new Blob([audioBuffer], { type: 'audio/mpeg' })
     } catch (error) {
       console.error('TTS synthesize error:', error)
-      throw new Error(error.message || '语音合成失败，请检查网络连接')
+      throw new Error(error.message || 'Speech synthesis failed, please check network connection')
     }
   }
 }

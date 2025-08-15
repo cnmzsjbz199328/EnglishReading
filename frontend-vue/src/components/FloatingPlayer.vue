@@ -1,16 +1,16 @@
 <template>
   <div v-if="visible && audioSrc" class="floating-player">
     <div v-if="!audioSrc" class="no-media">
-      无可用音频
+      No audio available
     </div>
     
     <div v-else class="player-row">
-      <!-- 播放按钮 -->
-      <button class="play-btn" @click="togglePlay" :aria-label="isPlaying ? '暂停' : '播放'">
+      <!-- Play Button -->
+      <button class="play-btn" @click="togglePlay" :aria-label="isPlaying ? 'Pause' : 'Play'">
         {{ isPlaying ? '⏸' : '▶' }}
       </button>
       
-      <!-- 进度控制 -->
+      <!-- Progress Control -->
       <div class="progress-container">
         <div class="time-bar">
           <span>{{ formatTime(currentTime) }}</span>
@@ -21,16 +21,16 @@
         </div>
       </div>
       
-      <!-- 速度控制 -->
+      <!-- Speed Control -->
       <div class="speed-control">
-        <button class="speed-btn" @click="changeSpeed(-0.1)" aria-label="减速">−</button>
+        <button class="speed-btn" @click="changeSpeed(-0.1)" aria-label="Slow down">−</button>
         <div class="speed-display">{{ playbackRate.toFixed(1) }}×</div>
-        <button class="speed-btn" @click="changeSpeed(0.1)" aria-label="加速">+</button>
+        <button class="speed-btn" @click="changeSpeed(0.1)" aria-label="Speed up">+</button>
       </div>
       
-      <!-- 音量控制 -->
+      <!-- Volume Control -->
       <div class="volume-control">
-        <button class="volume-btn" @click="toggleMute" :aria-label="isMuted ? '取消静音' : '静音'">
+        <button class="volume-btn" @click="toggleMute" :aria-label="isMuted ? 'Unmute' : 'Mute'">
           {{ isMuted ? '🔇' : '🔊' }}
         </button>
         <div class="volume-slider" @click="setVolume" ref="volumeSlider">

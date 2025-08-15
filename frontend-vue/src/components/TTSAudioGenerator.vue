@@ -1,16 +1,16 @@
 <template>
   <div class="tts-audio-generator">
-    <!-- 标题栏 -->
+    <!-- Header -->
     <div class="tts-header">
       <h3 class="tts-title">
         <span class="icon">🎤</span>
-        Text-to-Speech 音频生成
+        Text-to-Speech Audio Generation
       </h3>
       <button 
         v-if="isAudioReady" 
         @click="$emit('close')"
         class="close-btn"
-        aria-label="关闭"
+        aria-label="Close"
       >
         ×
       </button>
@@ -22,15 +22,15 @@
       {{ error }}
     </div>
 
-    <!-- 文本输入区域：外部文本模式下隐藏 -->
+    <!-- Text Input Section: Hidden in external text mode -->
     <div class="text-input-section" v-if="!useExternalText">
       <label for="tts-text" class="input-label">
-        要转换的文本 <span class="required">*</span>
+        Text to Convert <span class="required">*</span>
       </label>
       <textarea
         id="tts-text"
         v-model="inputText"
-        placeholder="请输入要转换为语音的文本..."
+        placeholder="Enter the text you want to convert to speech..."
         class="text-input"
         :disabled="isGenerating"
         rows="4"
@@ -38,15 +38,15 @@
       ></textarea>
       <div class="text-info">
         <span class="char-count" :class="{ 'over-limit': inputText.length > 5000 }">
-          {{ inputText.length }}/5000 字符
+          {{ inputText.length }}/5000 characters
         </span>
         <span v-if="inputText.trim()" class="duration-estimate">
-          预计时长: ~{{ estimatedDuration }}秒
+          Est. duration: ~{{ estimatedDuration }}s
         </span>
       </div>
     </div>
 
-    <!-- 语音设置：可折叠的高级设置 -->
+    <!-- Voice Settings: Collapsible advanced settings -->
     <div class="voice-settings-container" v-if="useExternalText">
       <div class="settings-toggle">
         <button 
@@ -55,18 +55,18 @@
           :disabled="isGenerating"
         >
           <span class="toggle-icon">{{ showSettings ? '🔼' : '🔽' }}</span>
-          {{ showSettings ? '隐藏高级设置' : '显示高级设置' }}
+          {{ showSettings ? 'Hide Advanced Settings' : 'Show Advanced Settings' }}
         </button>
-        <div class="settings-hint">使用默认英语语音，标准语速</div>
+        <div class="settings-hint">Using default English voice, standard speed</div>
       </div>
       
       <div class="voice-settings" v-if="showSettings">
-        <h4 class="settings-title">语音设置</h4>
+        <h4 class="settings-title">Voice Settings</h4>
         
         <div class="settings-grid">
-          <!-- 语言选择 -->
+          <!-- Language Selection -->
           <div class="setting-item">
-            <label for="language-select">语言</label>
+            <label for="language-select">Language</label>
             <select 
               id="language-select" 
               v-model="settings.language"
@@ -77,7 +77,7 @@
               <option value="en-US">English (US)</option>
               <option value="en-GB">English (UK)</option>
               <option value="en-AU">English (AU)</option>
-              <option value="cmn-CN">中文 (普通话)</option>
+              <option value="cmn-CN">Chinese (Mandarin)</option>
               <option value="ja-JP">日本語</option>
               <option value="ko-KR">한국어</option>
               <option value="es-ES">Español</option>
@@ -86,16 +86,16 @@
             </select>
           </div>
 
-          <!-- 声音选择 -->
+          <!-- Voice Selection -->
           <div class="setting-item">
-            <label for="voice-select">声音</label>
+            <label for="voice-select">Voice</label>
             <select 
               id="voice-select" 
               v-model="settings.voice"
               :disabled="isGenerating || voiceOptions.length === 0"
               class="setting-select"
             >
-              <option value="auto">自动选择</option>
+              <option value="auto">Auto Select</option>
               <option 
                 v-for="voice in voiceOptions" 
                 :key="voice.name" 
@@ -126,16 +126,16 @@
               class="setting-slider"
             />
             <div class="slider-labels">
-              <span>慢</span>
-              <span>正常</span>
-              <span>快</span>
+              <span>Slow</span>
+              <span>Normal</span>
+              <span>Fast</span>
             </div>
           </div>
 
-          <!-- 音调 -->
+          <!-- Pitch -->
           <div class="setting-item">
             <label for="pitch-slider">
-              音调: {{ settings.pitch > 0 ? '+' : '' }}{{ settings.pitch }}
+              Pitch: {{ settings.pitch > 0 ? '+' : '' }}{{ settings.pitch }}
             </label>
             <input
               id="pitch-slider"
@@ -148,16 +148,16 @@
               class="setting-slider"
             />
             <div class="slider-labels">
-              <span>低</span>
-              <span>标准</span>
-              <span>高</span>
+              <span>Low</span>
+              <span>Standard</span>
+              <span>High</span>
             </div>
           </div>
         </div>
 
-        <!-- 预设配置 -->
+        <!-- Preset Configurations -->
         <div class="presets">
-          <span class="presets-label">快速设置:</span>
+          <span class="presets-label">Quick Settings:</span>
           <button 
             v-for="preset in presets" 
             :key="preset.name"
@@ -172,7 +172,7 @@
       </div>
     </div>
 
-    <!-- 操作按钮：简洁的一键生成 -->
+    <!-- Action Buttons: Simple one-click generation -->
     <div class="action-buttons">
       <button
         @click="generateAudio"
@@ -181,20 +181,20 @@
       >
         <span v-if="isGenerating" class="loading-spinner"></span>
         <span class="btn-icon">🎤</span>
-        {{ isGenerating ? '正在生成音频...' : '一键生成语音' }}
+        {{ isGenerating ? 'Generating Audio...' : 'Generate Speech' }}
       </button>
       
       <div v-if="useExternalText && effectiveText" class="text-preview-mini">
-        <span class="preview-label">将合成:</span>
+        <span class="preview-label">Will synthesize:</span>
         <span class="preview-content">{{ effectiveText.slice(0, 50) }}{{ effectiveText.length > 50 ? '...' : '' }}</span>
-        <span class="preview-stats">({{ effectiveText.length }} 字符, ~{{ estimatedDuration }}秒)</span>
+        <span class="preview-stats">({{ effectiveText.length }} characters, ~{{ estimatedDuration }}s)</span>
       </div>
     </div>
 
-    <!-- 音频预览区域 -->
+    <!-- Audio Preview Area -->
     <div v-if="isAudioReady" class="audio-preview">
       <div class="preview-header">
-        <span class="preview-title">🎵 音频预览</span>
+        <span class="preview-title">🎵 Audio Preview</span>
         <span class="preview-text">{{ currentText.substring(0, 100) }}{{ currentText.length > 100 ? '...' : '' }}</span>
       </div>
       
@@ -206,19 +206,19 @@
         preload="metadata"
       ></audio>
 
-      <!-- 确认使用按钮 -->
+      <!-- Confirm Use Buttons -->
       <div class="confirm-actions">
         <button
           @click="confirmUse"
           class="btn btn-success confirm-btn"
         >
-          ✓ 使用此音频
+          ✓ Use This Audio
         </button>
         <button
           @click="regenerate"
           class="btn btn-outline regenerate-btn"
         >
-          🔄 重新生成
+          🔄 Regenerate
         </button>
       </div>
     </div>
@@ -289,11 +289,11 @@ export default {
       return availableVoices.value.slice(0, 10)
     })
 
-    // 预设配置（保留接口，默认 normal）
+    // Preset configurations (keep interface, default normal)
     const presets = [
-      { name: '慢速', key: 'slow', description: '适合学习' },
-      { name: '正常', key: 'normal', description: '标准语速' },
-      { name: '快速', key: 'fast', description: '快速阅读' }
+      { name: 'Slow', key: 'slow', description: 'Suitable for learning' },
+      { name: 'Normal', key: 'normal', description: 'Standard speed' },
+      { name: 'Fast', key: 'fast', description: 'Fast reading' }
     ]
 
     // 方法
