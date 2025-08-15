@@ -157,6 +157,61 @@
 }
 
 /* Text synchronization styles */
+.text-segment {
+  display: inline;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.text-segment:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+/* 当前正在播放的段落 */
+.segment-current {
+  background: linear-gradient(120deg, #ffe58f 0%, #ffd666 100%) !important;
+  color: #2c3e50 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(255, 214, 102, 0.5) !important;
+  transform: translateY(-1px) !important;
+  border: 2px solid #f59e0b !important;
+  border-radius: 6px !important;
+}
+
+/* 已播放的段落 */
+.segment-past {
+  color: #9ca3af !important;
+  opacity: 0.6 !important;
+  background: rgba(107, 114, 128, 0.1) !important;
+}
+
+/* 未播放的段落 */
+.segment-future {
+  color: #374151 !important;
+}
+
+/* 非活动状态 */
+.segment-inactive {
+  color: #374151 !important;
+}
+
+/* 段落点击效果 */
+.text-segment:active {
+  transform: scale(0.98);
+}
+
+/* 段落分隔符视觉提示 */
+.text-segment:not(:last-child)::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+}
+
+/* Word segment legacy styles - 保留兼容性 */
 .word-segment {
   display: inline;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -164,21 +219,16 @@
   border-radius: 3px;
 }
 
-.word-segment.highlight-current {
+.word-segment.word-current {
   background-color: #fbbf24;
   color: #1f2937;
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(251, 191, 36, 0.3);
 }
 
-.word-segment.highlight-passed {
+.word-segment.word-past {
   background-color: #d1fae5;
   color: #065f46;
-}
-
-.word-segment.highlight-upcoming {
-  background-color: transparent;
-  color: #6b7280;
 }
 
 /* Enhanced scrollbar for reading content */
@@ -198,4 +248,58 @@
 
 .reading-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 新增响应式优化 */
+@media (max-width: 768px) {
+  .text-segment {
+    padding: 3px 2px;
+    font-size: 14px;
+  }
+  
+  .reading-content {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-segment {
+    padding: 2px 1px;
+    font-size: 13px;
+  }
+  
+  .reading-content {
+    font-size: 13px !important;
+    padding: 16px !important;
+  }
+}
+
+/* 动画优化 - 减少动画在低性能设备上的影响 */
+@media (prefers-reduced-motion: reduce) {
+  .text-segment {
+    transition: none;
+  }
+  
+  .text-segment:hover {
+    transform: none;
+  }
+  
+  .segment-current {
+    transform: none;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .text-segment {
+    padding: 4px 6px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .text-segment:hover {
+    background: rgba(102, 126, 234, 0.2);
+  }
 }

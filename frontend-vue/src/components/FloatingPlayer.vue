@@ -67,7 +67,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['timeUpdate'])
+const emit = defineEmits(['time-update', 'loaded'])
 
 // 音频元素引用
 const audioElement = ref(null)
@@ -168,6 +168,9 @@ const onLoadedMetadata = () => {
     duration.value = audioElement.value.duration || 0
     audioElement.value.volume = volume.value
     audioElement.value.playbackRate = playbackRate.value
+    
+    // 触发音频加载完成事件
+    emit('loaded', duration.value)
   }
 }
 
@@ -175,7 +178,8 @@ const onTimeUpdate = () => {
   if (audioElement.value) {
     currentTime.value = audioElement.value.currentTime || 0
     // 触发时间更新事件，用于文字同步
-    emit('timeUpdate', currentTime.value)
+    console.log('🎵 音频时间更新:', currentTime.value)
+    emit('time-update', currentTime.value)
   }
 }
 
@@ -196,12 +200,23 @@ const onPause = () => {
 defineExpose({
   play: () => audioElement.value?.play(),
   pause: () => audioElement.value?.pause(),
+  seekTo: (time) => {
+    if (audioElement.value) {
+      audioElement.value.currentTime = time
+    }
+  },
   seek: (time) => {
     if (audioElement.value) audioElement.value.currentTime = time
   },
   setPlaybackRate: (rate) => {
     playbackRate.value = rate
     if (audioElement.value) audioElement.value.playbackRate = rate
+  },
+  get duration() {
+    return duration.value
+  },
+  get currentTime() {
+    return currentTime.value
   }
 })
 </script>
