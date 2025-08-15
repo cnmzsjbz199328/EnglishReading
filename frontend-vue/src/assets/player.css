@@ -12,7 +12,7 @@
   color: #fff;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
   min-width: 600px;
-  z-index: 1000;
+  z-index: 900;
   animation: slideUp 0.5s ease;
   font-size: 14px;
   opacity: 0.8;
