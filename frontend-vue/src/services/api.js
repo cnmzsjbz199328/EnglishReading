@@ -1,9 +1,6 @@
 // Simple API helper matching the prototype behavior
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 
-// TTS API配置
-const TTS_BASE_URL = 'https://english-reading-app.tj15982183241.workers.dev'
-
 export async function fetchJSON(path, options = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`
   const res = await fetch(url, options)
@@ -55,21 +52,8 @@ export const ttsApi = {
    */
   async getVoices(language = 'en-US') {
     try {
-      const url = `${TTS_BASE_URL}/api/tts/voices?language=${encodeURIComponent(language)}`
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.text()
-        throw new Error(`获取声音列表失败: ${response.status} ${errorData}`)
-      }
-      
-      return await response.json()
+      const url = `/api/tts/voices?language=${encodeURIComponent(language)}`
+      return await fetchJSON(url)
     } catch (error) {
       console.error('TTS getVoices error:', error)
       throw new Error(error.message || 'Network error, unable to get voice list')
@@ -114,7 +98,7 @@ export const ttsApi = {
         useSSML
       }
 
-      const response = await fetch(`${TTS_BASE_URL}/api/tts/preview`, {
+      const response = await fetch(`${API_BASE}/api/tts/preview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

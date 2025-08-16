@@ -64,40 +64,12 @@
     </div>
     
     <!-- TTS 高级设置（可折叠） -->
-    <div v-if="showSettings" style="
-      background: #f9fafb; 
-      border: 1px solid #e5e7eb; 
-      border-radius: 8px; 
-      padding: 16px; 
-      margin: 16px 0;
-    ">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <div>
-          <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">Language</label>
-          <select v-model="settings.language" style="
-            width: 100%; 
-            padding: 6px 8px; 
-            border: 1px solid #d1d5db; 
-            border-radius: 6px; 
-            font-size: 13px;
-          ">
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="en-AU">English (AU)</option>
-          </select>
-        </div>
-        <div>
-          <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">Speed: {{ settings.rate }}x</label>
-          <input 
-            v-model.number="settings.rate" 
-            type="range" 
-            min="0.5" 
-            max="2.0" 
-            step="0.1"
-            style="width: 100%; height: 6px; border-radius: 3px; background: #e5e7eb;"
-          />
-        </div>
-      </div>
+    <div v-if="showSettings" style="margin: 16px 0;">
+      <TTSSettings 
+        :settings="settings"
+        @update:settings="updateSettings"
+        @change="onSettingsChange"
+      />
     </div>
     
     <!-- 生成成功提示 -->
@@ -169,6 +141,8 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import TTSSettings from './TTSSettings.vue'
+import { DEFAULT_TTS_SETTINGS, validateTTSSettings } from '../config/tts-voices.js'
 
 const props = defineProps({
   text: {
@@ -184,18 +158,36 @@ const isGenerating = ref(false)
 const audioUrl = ref(null)
 const generatedFile = ref(null)
 
-const settings = reactive({
-  language: 'en-US',
-  rate: 1.0,
-  voice: 'auto',
-  pitch: 0
-})
+// 使用默认TTS设置
+const settings = reactive({ ...DEFAULT_TTS_SETTINGS })
+
+// 设置更新处理
+function updateSettings(newSettings) {
+  Object.assign(settings, newSettings)
+}
+
+// 设置变化处理
+function onSettingsChange(newSettings) {
+  console.log('TTS settings changed:', newSettings)
+  
+  // 验证设置
+  const validation = validateTTSSettings(newSettings)
+  if (!validation.isValid) {
+    console.warn('Invalid TTS settings:', validation.errors)
+  }
+}
 
 async function generateAudio() {
   if (!props.text.trim()) return
   
   isGenerating.value = true
   try {
+    // 验证设置
+    const validation = validateTTSSettings(settings)
+    if (!validation.isValid) {
+      throw new Error('Invalid TTS settings: ' + validation.errors.join(', '))
+    }
+
     const response = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/tts/preview`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -205,7 +197,7 @@ async function generateAudio() {
         voice: settings.voice,
         rate: settings.rate,
         pitch: settings.pitch,
-        encoding: 'MP3'
+        encoding: settings.encoding || 'MP3'
       })
     })
     
