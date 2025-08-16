@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>翻译检测测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-weight: bold;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .test-content {
+      background: #f5f5f5;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #007acc;
+    }
+    
+    .log {
+      background: #2d2d2d;
+      color: #00ff00;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    
+    .comparison-display {
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    .protected-text {
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+    }
+    
+    /* 额外保护原文显示区域 */
+    [translate="no"] {
+      translate: no !important;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>翻译检测测试</h1>
+  
+  <div class="status" id="status">
+    🔍 右键点击下方文本，选择"翻译为中文"进行测试
+  </div>
+  
+  <div class="test-content" id="content">
+    <h2>Test Text</h2>
+    <p>Hello world! This is a simple test for browser translation detection.</p>
+    <p>Artificial Intelligence is changing the world in many exciting ways.</p>
+  </div>
+  
+  <button onclick="checkNow()">立即检查</button>
+  <button onclick="clearLog()">清除日志</button>
+  <button onclick="clearComparisons()">清除对比</button>
+  
+  <h3>日志:</h3>
+  <div class="log" id="log"></div>
+
+  <script>
+    console.log('Script started');
+    
+    let originalTexts = [];
+    
+    function log(msg) {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEl = document.getElementById('log');
+      logEl.textContent += `[${timestamp}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(msg);
+    }
+    
+    function clearLog() {
+      document.getElementById('log').textContent = '';
+      log('Log cleared');
+    }
+    
+    function clearComparisons() {
+      const comparisons = document.querySelectorAll('.comparison-display');
+      comparisons.forEach(comp => comp.remove());
+      log('Comparison displays cleared');
+    }
+    
+    function saveOriginalTexts() {
+      const elements = document.querySelectorAll('#content p, #content h2');
+      elements.forEach((el, i) => {
+        originalTexts[i] = el.textContent.trim();
+        log(`Saved text ${i}: "${originalTexts[i].substring(0, 30)}..."`);
+      });
+    }
+    
+    function checkForTranslation() {
+      const elements = document.querySelectorAll('#content p, #content h2');
+      let changes = 0;
+      
+      elements.forEach((el, i) => {
+        const current = el.textContent.trim();
+        const original = originalTexts[i];
+        
+        if (original && current !== original) {
+          log(`CHANGE DETECTED in element ${i}:`);
+          log(`Original: "${original}"`);
+          log(`Current:  "${current}"`);
+          changes++;
+          
+          // 创建对比显示
+          createComparisonDisplay(el, original, current, i);
+        }
+      });
+      
+      if (changes > 0) {
+        document.getElementById('status').innerHTML = 
+          `✅ 检测到翻译！发现 ${changes} 个文本变化`;
+        document.getElementById('status').style.background = '#d4edda';
+        document.getElementById('status').style.color = '#155724';
+        log(`*** TRANSLATION DETECTED: ${changes} changes found ***`);
+      } else {
+        log('No changes detected');
+      }
+      
+      return changes > 0;
+    }
+    
+    function createComparisonDisplay(element, original, translated, index) {
+      // 检查是否已经创建了对比显示
+      let comparisonId = `comparison-${index}`;
+      let existingComparison = document.getElementById(comparisonId);
+      
+      if (!existingComparison) {
+        // 创建对比容器
+        const comparisonDiv = document.createElement('div');
+        comparisonDiv.id = comparisonId;
+        comparisonDiv.className = 'comparison-display';
+        comparisonDiv.setAttribute('translate', 'no'); // 防止整个对比框被翻译
+        comparisonDiv.style.cssText = `
+          background: #f8f9fa;
+          border: 2px solid #28a745;
+          border-radius: 8px;
+          padding: 15px;
+          margin: 10px 0;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
+        
+        // 插入到原元素后面
+        element.parentNode.insertBefore(comparisonDiv, element.nextSibling);
+      } else {
+        comparisonDiv = existingComparison;
+      }
+      
+      // 对原文进行base64编码保护
+      const protectedOriginal = btoa(unescape(encodeURIComponent(original)));
+      
+      // 更新对比内容
+      comparisonDiv.innerHTML = `
+        <div style="display: block; gap: 15px;">
+          <div style="margin-bottom: 15px;">
+            <div style="font-weight: bold; color: #007acc; margin-bottom: 8px;" translate="no">
+              🇺🇸 原文:
+            </div>
+            <div style="background: #e3f2fd; padding: 12px; border-radius: 4px; border-left: 4px solid #2196f3;" 
+                 translate="no" 
+                 data-original="${protectedOriginal}"
+                 id="original-${index}">
+              <span class="protected-text">${original}</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-weight: bold; color: #e91e63; margin-bottom: 8px;" translate="no">
+              🇨🇳 译文:
+            </div>
+            <div style="background: #fce4ec; padding: 12px; border-radius: 4px; border-left: 4px solid #e91e63;">
+              ${translated}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // 启动原文保护监控
+      startOriginalTextProtection(index);
+    }
+    
+    function startOriginalTextProtection(index) {
+      const originalElement = document.getElementById(`original-${index}`);
+      if (!originalElement) return;
+      
+      // 获取受保护的原文
+      const protectedData = originalElement.getAttribute('data-original');
+      const originalText = decodeURIComponent(escape(atob(protectedData)));
+      
+      // 创建MutationObserver监控原文区域
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' || mutation.type === 'characterData') {
+            const currentText = originalElement.textContent.trim();
+            if (currentText !== originalText) {
+              log(`⚠️ Original text protection: restoring element ${index}`);
+              // 恢复原文
+              originalElement.innerHTML = `<span class="protected-text">${originalText}</span>`;
+            }
+          }
+        });
+      });
+      
+      // 开始监控
+      observer.observe(originalElement, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+      
+      log(`🛡️ Protection activated for original text ${index}`);
+    }
+    
+    function checkNow() {
+      log('Manual check triggered');
+      checkForTranslation();
+    }
+    
+    // 简单的初始化
+    function init() {
+      log('Page initialization started');
+      saveOriginalTexts();
+      
+      // 定期检查
+      setInterval(() => {
+        checkForTranslation();
+      }, 2000);
+      
+      log('Monitoring started - checking every 2 seconds');
+    }
+    
+    // 等待页面加载
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+    console.log('Script setup complete');
+  </script>
+</body>
+</html>
