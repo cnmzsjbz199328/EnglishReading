@@ -1,7 +1,7 @@
-// 预设的TTS语音配置 - 基于Google Cloud TTS实际可用语音
+// Preset TTS voice configuration - Based on Google Cloud TTS available voices
 export const TTS_VOICES = {
   'en-US': [
-    // Chirp3-HD 系列 (最新高质量语音，以天体命名)
+    // Chirp3-HD series (Latest high-quality voices, named after celestial bodies)
     { name: 'en-US-Chirp3-HD-Achernar', displayName: 'Achernar (Female, Chirp3-HD)', gender: 'FEMALE', quality: 'premium', series: 'Chirp3-HD' },
     { name: 'en-US-Chirp3-HD-Achird', displayName: 'Achird (Male, Chirp3-HD)', gender: 'MALE', quality: 'premium', series: 'Chirp3-HD' },
     { name: 'en-US-Chirp3-HD-Algenib', displayName: 'Algenib (Male, Chirp3-HD)', gender: 'MALE', quality: 'premium', series: 'Chirp3-HD' },
@@ -33,12 +33,12 @@ export const TTS_VOICES = {
     { name: 'en-US-Chirp3-HD-Zephyr', displayName: 'Zephyr (Female, Chirp3-HD)', gender: 'FEMALE', quality: 'premium', series: 'Chirp3-HD' },
     { name: 'en-US-Chirp3-HD-Zubenelgenubi', displayName: 'Zubenelgenubi (Male, Chirp3-HD)', gender: 'MALE', quality: 'premium', series: 'Chirp3-HD' },
 
-    // Chirp-HD 系列 (高质量语音)
+    // Chirp-HD series (High-quality voices)
     { name: 'en-US-Chirp-HD-D', displayName: 'Voice D (Male, Chirp-HD)', gender: 'MALE', quality: 'high', series: 'Chirp-HD' },
     { name: 'en-US-Chirp-HD-F', displayName: 'Voice F (Female, Chirp-HD)', gender: 'FEMALE', quality: 'high', series: 'Chirp-HD' },
     { name: 'en-US-Chirp-HD-O', displayName: 'Voice O (Female, Chirp-HD)', gender: 'FEMALE', quality: 'high', series: 'Chirp-HD' },
 
-    // Neural2 系列 (高质量神经网络语音)
+    // Neural2 series (High-quality neural network voices)
     { name: 'en-US-Neural2-A', displayName: 'Voice A (Male, Neural2)', gender: 'MALE', quality: 'high', series: 'Neural2' },
     { name: 'en-US-Neural2-C', displayName: 'Voice C (Female, Neural2)', gender: 'FEMALE', quality: 'high', series: 'Neural2' },
     { name: 'en-US-Neural2-D', displayName: 'Voice D (Male, Neural2)', gender: 'MALE', quality: 'high', series: 'Neural2' },
@@ -49,16 +49,16 @@ export const TTS_VOICES = {
     { name: 'en-US-Neural2-I', displayName: 'Voice I (Male, Neural2)', gender: 'MALE', quality: 'high', series: 'Neural2' },
     { name: 'en-US-Neural2-J', displayName: 'Voice J (Male, Neural2)', gender: 'MALE', quality: 'high', series: 'Neural2' },
 
-    // Studio 系列 (录音棚质量)
+    // Studio series (Studio quality)
     { name: 'en-US-Studio-O', displayName: 'Voice O (Female, Studio)', gender: 'FEMALE', quality: 'high', series: 'Studio' },
     { name: 'en-US-Studio-Q', displayName: 'Voice Q (Male, Studio)', gender: 'MALE', quality: 'high', series: 'Studio' },
 
-    // News 系列 (新闻播报风格)
+    // News series (News broadcast style)
     { name: 'en-US-News-K', displayName: 'Voice K (Female, News)', gender: 'FEMALE', quality: 'high', series: 'News' },
     { name: 'en-US-News-L', displayName: 'Voice L (Female, News)', gender: 'FEMALE', quality: 'high', series: 'News' },
     { name: 'en-US-News-N', displayName: 'Voice N (Male, News)', gender: 'MALE', quality: 'high', series: 'News' },
 
-    // Wavenet 系列 (中等质量)
+    // Wavenet series (Medium quality)
     { name: 'en-US-Wavenet-A', displayName: 'Voice A (Male, Wavenet)', gender: 'MALE', quality: 'medium', series: 'Wavenet' },
     { name: 'en-US-Wavenet-B', displayName: 'Voice B (Male, Wavenet)', gender: 'MALE', quality: 'medium', series: 'Wavenet' },
     { name: 'en-US-Wavenet-C', displayName: 'Voice C (Female, Wavenet)', gender: 'FEMALE', quality: 'medium', series: 'Wavenet' },
@@ -70,11 +70,11 @@ export const TTS_VOICES = {
     { name: 'en-US-Wavenet-I', displayName: 'Voice I (Male, Wavenet)', gender: 'MALE', quality: 'medium', series: 'Wavenet' },
     { name: 'en-US-Wavenet-J', displayName: 'Voice J (Male, Wavenet)', gender: 'MALE', quality: 'medium', series: 'Wavenet' },
 
-    // 特殊语音
+    // Special voices
     { name: 'en-US-Casual-K', displayName: 'Voice K (Male, Casual)', gender: 'MALE', quality: 'medium', series: 'Casual' },
     { name: 'en-US-Polyglot-1', displayName: 'Voice 1 (Male, Polyglot)', gender: 'MALE', quality: 'medium', series: 'Polyglot' },
 
-    // Standard 系列 (标准质量)
+    // Standard series (Standard quality)
     { name: 'en-US-Standard-A', displayName: 'Voice A (Male, Standard)', gender: 'MALE', quality: 'basic', series: 'Standard' },
     { name: 'en-US-Standard-B', displayName: 'Voice B (Male, Standard)', gender: 'MALE', quality: 'basic', series: 'Standard' },
     { name: 'en-US-Standard-C', displayName: 'Voice C (Female, Standard)', gender: 'FEMALE', quality: 'basic', series: 'Standard' },
@@ -87,7 +87,7 @@ export const TTS_VOICES = {
     { name: 'en-US-Standard-J', displayName: 'Voice J (Male, Standard)', gender: 'MALE', quality: 'basic', series: 'Standard' }
   ],
   
-  // 其他语言保持不变，您可以类似地获取并更新
+  // Other languages remain unchanged, you can similarly get and update them
   'en-GB': [
     { name: 'en-GB-Neural2-A', displayName: 'UK Female (Neural2-A)', gender: 'FEMALE', quality: 'high' },
     { name: 'en-GB-Neural2-B', displayName: 'UK Male (Neural2-B)', gender: 'MALE', quality: 'high' },
@@ -102,7 +102,7 @@ export const TTS_VOICES = {
   ]
 }
 
-// 默认设置配置
+// Default settings configuration
 export const DEFAULT_TTS_SETTINGS = {
   language: 'en-US',
   voice: 'auto',
@@ -111,7 +111,7 @@ export const DEFAULT_TTS_SETTINGS = {
   encoding: 'MP3'
 }
 
-// 预设配置
+// Preset configurations
 export const TTS_PRESETS = {
   slow: { 
     name: 'Slow Reading',
@@ -133,51 +133,51 @@ export const TTS_PRESETS = {
   }
 }
 
-// 支持的语言列表
+// Supported languages list
 export const SUPPORTED_LANGUAGES = [
   { code: 'en-US', name: 'English (US)', flag: '🇺🇸' },
   { code: 'en-GB', name: 'English (UK)', flag: '🇬🇧' },
   { code: 'en-AU', name: 'English (AU)', flag: '🇦🇺' }
 ]
 
-// 工具函数：获取指定语言的语音列表
+// Utility function: Get voice list for specified language
 export function getVoicesForLanguage(language) {
   return TTS_VOICES[language] || []
 }
 
-// 工具函数：根据质量级别筛选语音
+// Utility function: Filter voices by quality level
 export function getVoicesByQuality(language, quality) {
   const voices = getVoicesForLanguage(language)
   return voices.filter(voice => voice.quality === quality)
 }
 
-// 工具函数：根据语音系列筛选语音
+// Utility function: Filter voices by voice series
 export function getVoicesBySeries(language, series) {
   const voices = getVoicesForLanguage(language)
   return voices.filter(voice => voice.series === series)
 }
 
-// 工具函数：获取推荐语音（优先级：Chirp3-HD > Chirp-HD > Neural2 > Studio > News）
+// Utility function: Get recommended voice (Priority: Chirp3-HD > Chirp-HD > Neural2 > Studio > News)
 export function getRecommendedVoice(language, gender = null) {
   const voices = getVoicesForLanguage(language)
   
-  // 定义质量优先级
+  // Define quality priority
   const qualityPriority = ['premium', 'high', 'medium', 'basic']
   const seriesPriority = ['Chirp3-HD', 'Chirp-HD', 'Neural2', 'Studio', 'News', 'Wavenet', 'Casual', 'Polyglot', 'Standard']
   
   let filtered = voices
   
-  // 如果指定了性别，先按性别筛选
+  // If gender is specified, filter by gender first
   if (gender) {
     filtered = voices.filter(voice => 
       voice.gender?.toLowerCase() === gender.toLowerCase()
     )
     if (filtered.length === 0) {
-      filtered = voices // 如果没有匹配的性别，则使用全部
+      filtered = voices // If no matching gender, use all
     }
   }
   
-  // 按质量和系列优先级排序
+  // Sort by quality and series priority
   filtered.sort((a, b) => {
     const qualityDiff = qualityPriority.indexOf(a.quality) - qualityPriority.indexOf(b.quality)
     if (qualityDiff !== 0) return qualityDiff
@@ -189,39 +189,39 @@ export function getRecommendedVoice(language, gender = null) {
   return filtered[0] || null
 }
 
-// 工具函数：获取语音系列的描述
+// Utility function: Get voice series description
 export function getSeriesDescription(series) {
   const descriptions = {
-    'Chirp3-HD': '最新高级AI语音，以天体命名，最自然的声音质量',
-    'Chirp-HD': '高质量AI语音，自然流畅',
-    'Neural2': '神经网络语音，高质量合成',
-    'Studio': '录音棚质量，专业级音质',
-    'News': '新闻播报风格，清晰专业',
-    'Wavenet': 'WaveNet技术，标准质量',
-    'Casual': '轻松对话风格',
-    'Polyglot': '多语言支持语音',
-    'Standard': '基础标准语音'
+    'Chirp3-HD': 'Latest advanced AI voices, named after celestial bodies, most natural sound quality',
+    'Chirp-HD': 'High-quality AI voices, natural and smooth',
+    'Neural2': 'Neural network voices, high-quality synthesis',
+    'Studio': 'Studio quality, professional-grade audio',
+    'News': 'News broadcast style, clear and professional',
+    'Wavenet': 'WaveNet technology, standard quality',
+    'Casual': 'Casual conversation style',
+    'Polyglot': 'Multi-language support voices',
+    'Standard': 'Basic standard voices'
   }
-  return descriptions[series] || '标准语音'
+  return descriptions[series] || 'Standard voice'
 }
 
-// 工具函数：获取质量等级描述
+// Utility function: Get quality level description
 export function getQualityDescription(quality) {
   const descriptions = {
-    'premium': '顶级音质 (Premium)',
-    'high': '高音质 (High)',
-    'medium': '中等音质 (Medium)', 
-    'basic': '基础音质 (Basic)'
+    'premium': 'Premium Quality',
+    'high': 'High Quality',
+    'medium': 'Medium Quality', 
+    'basic': 'Basic Quality'
   }
-  return descriptions[quality] || '标准音质'
+  return descriptions[quality] || 'Standard Quality'
 }
 
-// 工具函数：获取所有支持的语言代码
+// Utility function: Get all supported language codes
 export function getSupportedLanguageCodes() {
   return Object.keys(TTS_VOICES)
 }
 
-// 工具函数：验证设置
+// Utility function: Validate settings
 export function validateTTSSettings(settings) {
   const errors = []
   
