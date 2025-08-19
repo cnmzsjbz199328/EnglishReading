@@ -17,9 +17,9 @@ select:disabled{opacity:.55;cursor:not-allowed;}
 .reading-mode-btn:hover{background:#fff;border-color:#667eea;color:#667eea;}
 .reading-mode-btn.active{background:#667eea;color:#fff;border-color:#667eea;}
 .current-feed{color:#f0f3ff;font-size:13px;margin:0 4px 14px;text-shadow:0 1px 2px rgba(0,0,0,.25);}
-.content-area{background:rgba(255,255,255,0.95);border-radius:24px;padding:32px 30px 40px;backdrop-filter:blur(18px);box-shadow:0 20px 40px rgba(0,0,0,0.08);}
-#detail h3{font-size:1.75em;margin:0 0 18px;color:#2c3e50;font-weight:600;}
-#reader{font-size:1.02em;line-height:1.75;text-align:justify;max-height:50vh;overflow-y:auto;padding:14px 18px;border:1px solid #e3e8ef;border-radius:16px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.04) inset;}
+.content-area{background:rgba(255,255,255,0.95);border-radius:24px;padding:2px 0px 1px;backdrop-filter:blur(18px);box-shadow:0 20px 40px rgba(0,0,0,0.08);}
+#detail h3{font-size:1.75em;margin:0 0 18px 20px;color:#2c3e50;font-weight:600;}
+#reader{font-size:1.02em;line-height:1.75;text-align:justify;max-height:50vh;overflow-y:auto;padding:14px 18px;border:1px solid #e3e8ef;border-radius:16px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.04) inset;margin: 20px;}
 .seg{padding:2px 3px;border-radius:4px;transition:all 0.3s ease;display:inline;cursor:pointer;margin:0 1px;}
 .seg:hover{transform:scale(1.02);box-shadow:0 2px 8px rgba(0,0,0,0.1);}
 .seg.past{background:rgba(34, 197, 94, 0.15);color:#059669;}
@@ -33,7 +33,7 @@ select:disabled{opacity:.55;cursor:not-allowed;}
 .subtitle-next{opacity:.55;font-size:.9em;margin-top:14px;}
 .subtitle-highlight{background:#ffe58f;color:#222;padding:4px 6px;border-radius:8px;}
 /* 浮动播放器 */
-.floating-player{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-radius:22px;padding:18px 26px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35);min-width:480px;z-index:1000;animation:slideUp .5s ease;font-size:14px;opacity: 0.8;}
+.floating-player{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-radius:22px;padding:18px 26px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35);min-width:888px;z-index:1000;animation:slideUp .5s ease;font-size:14px;opacity: 0.8;}
 @keyframes slideUp{from{opacity:0;transform:translate(-50%,20px);}to{opacity:1;transform:translate(-50%,0);}}
 .player-row{display:flex;align-items:center;gap:18px;}
 .play-btn{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(102,126,234,.45);transition:.28s;}
@@ -69,8 +69,8 @@ select:disabled{opacity:.55;cursor:not-allowed;}
 
 /* ====== 更细致的小尺寸适配 ====== */
 @media (max-width:540px){
-  .container{padding:14px 12px 138px;}
-  .header{padding:16px 14px 20px;margin-bottom:18px;border-radius:20px;}
+  .container{padding:14px 12px 0px;}
+  .header{padding:10px 14px 10px;margin-bottom:18px;border-radius:20px;}
   .header h1{font-size:clamp(1.35rem,5.2vw,1.85rem);margin-bottom:12px;}
   /* Single row controls (allow horizontal scroll if overflow) */
   .controls-top{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:8px;justify-content:flex-start;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
@@ -85,7 +85,7 @@ select:disabled{opacity:.55;cursor:not-allowed;}
   #reader{max-height:54vh;padding:10px 12px;font-size:.94em;line-height:1.58;border-radius:14px;}
   .subtitle-layer{padding:18px 16px 24px;font-size:16.5px;line-height:1.42;border-radius:18px;}
   .subtitle-next{margin-top:8px;font-size:.83em;}
-  .floating-player{width:100%;left:50%;transform:translateX(-50%);bottom:10px;padding:12px 12px;border-radius:18px;min-width:0;font-size:12.5px;}
+  .floating-player{width:95%;left:50%;transform:translateX(-50%);bottom:10px;padding:2px 12px;border-radius:18px;min-width:0;font-size:12.5px;}
   .player-row{flex-wrap:wrap;gap:8px;}
   .play-btn{width:50px;height:50px;font-size:19px;}
   .speed-control,.volume-control{padding:6px 6px;gap:6px;}
