@@ -1,6 +1,6 @@
 <template>
   <div style="margin-bottom: 32px;">
-    <div class="status" style="margin-bottom: 16px;">{{ globalStatus }}</div>
+    <div class="status" style="margin-bottom: 0px;">{{ globalStatus }}</div>
     
     <div v-if="!items.length" class="muted" style="text-align: center; padding: 40px 0;">
       <div class="empty-state-icon" style="font-size: 48px; margin-bottom: 16px;">📚</div>

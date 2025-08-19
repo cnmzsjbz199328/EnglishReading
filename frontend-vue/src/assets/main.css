@@ -2,6 +2,7 @@
 @import './player.css';
 @import './responsive.css';
 @import './accessibility.css';
+@import './styles/home-view.css';
 
 /* Core Layout Styles - Based on FrontEndForVOA Design */
 * {
@@ -208,7 +209,7 @@ select {
 
 /* 状态信息 */
 .status {
-  margin-top: 12px;
+  margin-top: 0px;
   min-height: 20px;
   color: #667eea;
   font-size: 14px;

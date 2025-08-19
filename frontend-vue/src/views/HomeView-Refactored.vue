@@ -118,7 +118,7 @@ loadList()
     <!-- 主要内容区域 -->
     <div class="content-area">
       <!-- 顶部操作区域 -->
-      <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="margin-bottom: 0px; display: flex; justify-content: space-between; align-items: center;">
         <h1 style="margin: 0; color: #2d3748;">English Reading</h1>
         <button 
           @click="modalOpen = true" 
